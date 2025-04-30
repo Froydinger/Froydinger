@@ -1,0 +1,504 @@
+---
+// src/pages/pricing.astro
+import Layout from '../layouts/Layout.astro';
+import { fade } from 'astro:transitions';
+
+// Updated Calendly URL
+const calendlyUrl = 'https://calendly.com/jkrd09/30min';
+
+// Consulting Tiers Data
+const consultingTiers = [
+  {
+    id: 'consulting-strategy',
+    name: "Strategy Session",
+    price: "$45",
+    // UPDATED: Added keywords
+    description: "An affordable, focused 1-hour call ideal for planning specific projects, launching new channels/podcasts, or conducting channel audits.",
+    features: [
+      "In-depth analysis of one key area.",
+      "Actionable plan for a specific goal.",
+      "Perfect for one-off strategic needs.",
+      "Gain clarity and direction quickly."
+    ],
+    highlight: true // Highlight this tier
+  },
+  {
+    id: 'consulting-growth',
+    name: "Growth Accelerator", // Renamed tier
+    price: "$250 / month",
+    // UPDATED: Added keywords
+    description: "Ongoing digital consulting with 2x 1-hour calls per month, laser-focused on your specific content goals (YouTube, podcast, blog) and challenges.",
+    features: [
+      "Consistent support & accountability.",
+      "Deep dives into strategy & performance.",
+      "Adaptable to your evolving needs.",
+      "Priority access for questions.",
+      "Build momentum month over month."
+    ],
+    highlight: false
+  },
+  {
+    id: 'consulting-custom',
+    name: "Custom Project",
+    price: "Custom",
+    // UPDATED: Added keywords
+    description: "Bespoke solutions for significant undertakings like course creation, complex content strategies, team workshops, or advanced podcast setup.",
+    features: [
+      "Tailored scope and deliverables.",
+      "Dedicated project management.",
+      "Ideal for complex or large-scale goals.",
+      "Starts with a Discovery Call.",
+      "Let's create something impactful."
+    ],
+    highlight: false
+  }
+];
+
+// Website Tiers Data
+const websiteTiers = [
+  {
+    id: 'website-onepage',
+    name: "One-Page Website Design", // UPDATED: Added keywords
+    price: "$1000", // Base price
+    priceSuffix: "+ yearly domain fee", // Clarification
+    // UPDATED: Added keywords
+    description: "A professional single-page site perfect for landing pages, lead generation, or establishing your online presence. Simple website design solution.",
+    features: [
+      "Clean, modern design.",
+      "Contact form integration.",
+      "Basic SEO setup.",
+      "Domain connection assistance.",
+      "You cover the annual domain cost."
+    ],
+    highlight: false
+  },
+   {
+    id: 'website-multipage',
+    name: "Multi-Page Website Design", // UPDATED: Added keywords
+    price: "$1500+", // Base price
+    priceSuffix: "+ yearly domain fee", // Clarification
+    // UPDATED: Added keywords
+    description: "For businesses needing more than one page (e.g., About, Services, Blog). Price varies based on complexity. Full website design service.",
+    features: [
+      "No bulky plugins, no hosting fees.", // UPDATED
+      "Multiple page design & build.",
+      "Expanded content sections.",
+      "Scalable for future growth.",
+      "Great for Small Business/Membership Sites" // UPDATED
+    ],
+    highlight: false
+  }
+];
+
+
+const checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h5 inline-block mr-2 text-primary"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>`;
+---
+
+<Layout title="Pricing">
+  <main>
+    <section id="pricing-intro" class="section scroll-target" transition:animate={fade({ duration: '0.7s' })}>
+      <div class="container" style="text-align: center;">
+        {/* UPDATED: Added keywords */}
+        <h1>Affordable Consulting & Website Design Pricing</h1>
+        <p style="font-size: 1.1rem; color: var(--text-muted); max-width: 650px; margin: 0 auto 2.5rem auto;">
+          Whether you need <strong>digital consulting</strong>, <strong>blogging help</strong>, <strong>podcast setup</strong> guidance, or a new <strong>website design</strong>, let's find the best approach for <strong>your</strong> goals. All engagements begin with a free Discovery Call.
+        </p>
+         {/* Main top button removed as requested, buttons are now per-tier */}
+      </div>
+    </section>
+
+    {/* --- Pricing Toggle Section --- */}
+    <section id="pricing-toggle-section" class="section section-alt-bg scroll-target" transition:animate={fade({ duration: '0.7s', delay: '0.2s' })}>
+      <div class="container">
+        {/* --- Toggle Switch --- */}
+        <div class="pricing-toggle">
+          {/* UPDATED: Added keywords */}
+          <button class="toggle-button active" data-target="consulting-tiers">Content Consulting</button>
+          <button class="toggle-button" data-target="website-tiers">Website Design</button>
+        </div>
+
+        {/* --- Tier Containers --- */}
+        <div id="consulting-tiers" class="tier-container active">
+          <div class="pricing-grid consulting-grid">
+            {consultingTiers.map(tier => (
+              <div class:list={["pricing-card", { highlight: tier.highlight }]} id={tier.id}>
+                <div class="card-header">
+                  <h2>{tier.name}</h2>
+                  <p class="price">{tier.price}</p>
+                  <p class="description">{tier.description}</p>
+                </div>
+                <ul class="features">
+                  {tier.features.map(feature => (
+                    <li>
+                      <span class="check-icon" set:html={checkIcon}></span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                {/* --- ADDED: Book Free Call Button per Tier --- */}
+                <a
+                  href={calendlyUrl}
+                  onclick={`Calendly.initPopupWidget({url: '${calendlyUrl}'}); return false;`}
+                  class="button"
+                  style="width: 50%; margin-left: auto; margin-right: auto; margin-top: 2rem;"
+                >
+                  Book Free Call
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div id="website-tiers" class="tier-container">
+           <div class="pricing-grid website-grid">
+             {websiteTiers.map(tier => (
+               <div class:list={["pricing-card", { highlight: tier.highlight }]} id={tier.id}>
+                 <div class="card-header">
+                   <h2>{tier.name}</h2>
+                   <p class="price">{tier.price} <span class="price-suffix">{tier.priceSuffix}</span></p>
+                   <p class="description">{tier.description}</p>
+                 </div>
+                 <ul class="features">
+                   {tier.features.map(feature => (
+                     <li>
+                       <span class="check-icon" set:html={checkIcon}></span>
+                       {feature}
+                     </li>
+                   ))}
+                 </ul>
+                 {/* --- ADDED: Book Free Call Button per Tier --- */}
+                 <a
+                   href={calendlyUrl}
+                   onclick={`Calendly.initPopupWidget({url: '${calendlyUrl}'}); return false;`}
+                   class="button"
+                   style="width: 50%; margin-left: auto; margin-right: auto; margin-top: 2rem;"
+                 >
+                   Book Free Call
+                 </a>
+               </div>
+             ))}
+           </div>
+         </div>
+
+         {/* --- Have a question? Link --- */}
+         <div class="question-link" style="text-align: center; margin-top: 3rem;">
+           <a href="/contact">Have a question?</a>
+         </div>
+
+         {/* --- Maintenance Info --- */}
+         <div class="maintenance-note" style="text-align: center; max-width: 750px; margin-left: auto; margin-right: auto;">
+           <p><strong>Website Maintenance:</strong> Limited monthly retainers ($200/month) are available for ongoing site management after the initial build. Please inquire during your Discovery Call.</p>
+         </div>
+
+      </div>
+    </section>
+
+    {/* --- REMOVED: Final CTA / Info Section --- */}
+    {/* ... */}
+
+  </main>
+</Layout>
+
+<script is:inline>
+  function initPricingToggle() {
+    const toggleButtons = document.querySelectorAll('.pricing-toggle .toggle-button');
+    const tierContainers = document.querySelectorAll('.tier-container');
+
+    if (!toggleButtons.length || !tierContainers.length) return;
+
+    // Function to handle toggle
+    function handleToggle(event) {
+      const targetId = event.target.dataset.target;
+
+      // Update button active state
+      toggleButtons.forEach(button => {
+        button.classList.toggle('active', button.dataset.target === targetId);
+      });
+
+      // Update container visibility
+      tierContainers.forEach(container => {
+        container.classList.toggle('active', container.id === targetId);
+      });
+    }
+
+    // Add event listeners
+    toggleButtons.forEach(button => {
+      button.addEventListener('click', handleToggle);
+    });
+
+    // Ensure initial state is correct (first button/container active)
+    const initialActiveButton = document.querySelector('.pricing-toggle .toggle-button.active');
+    const initialTargetId = initialActiveButton ? initialActiveButton.dataset.target : null;
+
+    if (initialTargetId) {
+        tierContainers.forEach(container => {
+            container.classList.toggle('active', container.id === initialTargetId);
+        });
+    } else {
+        // Fallback if no button is initially active (shouldn't happen with default HTML)
+        if (toggleButtons[0]) toggleButtons[0].classList.add('active');
+        if (tierContainers[0]) tierContainers[0].classList.add('active');
+    }
+  }
+
+  // Run on initial load
+  initPricingToggle();
+
+  // Run after Astro view transitions
+  document.addEventListener('astro:after-swap', initPricingToggle);
+</script>
+
+
+<style>
+  /* --- Pricing Toggle Styles --- */
+  .pricing-toggle {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 3rem;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 0.5rem;
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .toggle-button {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    background-color: transparent;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    text-align: center;
+  }
+
+  .toggle-button.active {
+    background-color: var(--primary-color);
+    color: var(--black); /* UPDATED: Changed from --button-text-color */
+    box-shadow: 0 2px 5px rgba(250, 204, 21, 0.2);
+  }
+
+  .toggle-button:not(.active):hover {
+    color: var(--text-color);
+  }
+
+  /* --- Tier Container Visibility --- */
+  .tier-container {
+    display: none; /* Hide by default */
+    animation: fadeIn 0.5s ease forwards;
+  }
+
+  .tier-container.active {
+    display: block; /* Show active container */
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+
+  /* --- Existing Styles (Adjusted) --- */
+  .pricing-grid {
+    display: grid;
+    gap: 2rem;
+    align-items: stretch; /* Ensures cards stretch to the same height */
+  }
+
+  .consulting-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .website-grid {
+     /* Adjust columns for potentially fewer website tiers */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    max-width: 800px; /* Center the website cards if fewer than 3 */
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .pricing-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--card-shadow-hover);
+  }
+
+  /* Highlight style for Strategy Session */
+  .pricing-card.highlight {
+    border-color: var(--primary-color);
+    transform: scale(1.03); /* Keep subtle scale */
+    box-shadow: 0 10px 30px rgba(250, 204, 21, 0.15);
+  }
+   .pricing-card.highlight:hover {
+     transform: scale(1.03) translateY(-8px); /* Combine scale and lift */
+   }
+
+
+  .card-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .card-header h2 {
+    margin-bottom: 0.5rem;
+    color: var(--heading-text);
+    font-size: 1.5rem;
+  }
+  .price {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    font-family: var(--font-heading);
+    line-height: 1.1; /* Adjust line height for suffix */
+  }
+   .pricing-card.highlight .price {
+     color: var(--primary-color-dark); /* Darker yellow for highlighted price */
+   }
+  .price-suffix {
+    display: block; /* Put suffix on new line */
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+  }
+
+  .description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    min-height: 60px; /* Slightly reduced min-height */
+  }
+
+  .features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0 0; /* Remove bottom margin */
+    flex-grow: 1; /* Allows features list to take up space */
+  }
+  .features li {
+    margin-bottom: 1rem;
+    color: var(--body-text);
+    display: flex;
+    align-items: flex-start;
+    font-size: 0.9rem;
+  }
+  .check-icon {
+     flex-shrink: 0;
+     width: 18px;
+     height: 18px;
+     margin-right: 0.75rem;
+     margin-top: 0.1em;
+     color: var(--primary-color);
+  }
+   .check-icon svg {
+     display: block;
+     width: 100%;
+     height: 100%;
+   }
+
+  /* --- UPDATED: Moved Maintenance Note & Question Link Styles --- */
+  .maintenance-note {
+    margin-top: 3rem; /* Add space above */
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .maintenance-note p {
+    margin-bottom: 0;
+  }
+  .maintenance-note strong {
+    color: var(--text-color);
+  }
+
+  .question-link {
+    margin-top: 1.5rem; /* Reduced space above */
+  }
+  .question-link a {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    text-decoration: underline;
+  }
+  .question-link a:hover {
+    color: var(--primary-color-dark);
+    text-decoration: none;
+  }
+
+
+  @media (max-width: 992px) {
+     .consulting-grid {
+       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+     }
+     .website-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+     }
+     /* Adjust button width on medium screens */
+     .pricing-card .button { /* Target buttons inside cards */
+        width: 60%;
+     }
+  }
+
+  @media (max-width: 768px) {
+    .pricing-grid {
+      grid-template-columns: 1fr; /* Stack all cards */
+      max-width: 450px; /* Limit width on mobile */
+      margin-left: auto;
+      margin-right: auto;
+    }
+     .pricing-card.highlight {
+       transform: scale(1); /* Remove scale on mobile */
+     }
+     .pricing-card.highlight:hover {
+       transform: translateY(-8px); /* Keep hover lift */
+     }
+     .description {
+       min-height: auto;
+     }
+     .card-header h2, .price, .description, .features li {
+        font-size: revert; /* Revert font sizes on smaller screens */
+     }
+     .check-icon {
+        width: 20px;
+        height: 20px;
+     }
+     .price-suffix {
+        font-size: 0.75rem;
+     }
+     .pricing-toggle {
+        max-width: 90%;
+     }
+     .toggle-button {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.5rem;
+     }
+     /* Adjust button width on small screens */
+     .pricing-card .button { /* Target buttons inside cards */
+        width: 80%;
+     }
+  }
+
+  @media (max-width: 480px) {
+     /* Adjust button width on extra small screens */
+     .pricing-card .button { /* Target buttons inside cards */
+        width: 90%;
+     }
+  }
+</style>

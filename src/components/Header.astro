@@ -1,0 +1,381 @@
+---
+// UPDATED: New logo URL
+const userImage = "https://froydingermediagroup.wordpress.com/wp-content/uploads/2025/04/froydingerneonneon.png";
+const userName = "Jake Freudinger"; // Keep for alt text context
+const siteTitle = "Froydinger Media"; // Keep for alt text context
+
+// Define menu items - Added About and Blog links
+const menuItems = [
+  { name: "Home", href: "/" },
+  { name: "Blog", href: "/blog" },
+  { name: "About", href: "/about" }, // Added About link
+  { name: "Pricing", href: "/pricing" },
+  { name: "Contact", href: "/contact" },
+];
+
+// Define social media links
+// UPDATED: Social Links to use 'froydinger' handle and specific "Buy Me A ☕" text
+const socialLinks = [
+  { name: "Facebook", href: "https://www.facebook.com/froydinger", label: "FB" },
+  { name: "Instagram", href: "https://www.instagram.com/froydinger", label: "IG" },
+  { name: "TikTok", href: "https://www.tiktok.com/@froydinger", label: "TikTok" },
+  { name: "X", href: "https://twitter.com/froydinger", label: "X" },
+  { name: "Buy Me a Coffee", href: "https://buymeacoffee.com/froydinger", label: "Buy Me A ☕" } // UPDATED: Use specific text
+];
+
+// Header height variable based on 5px padding + 60px logo
+const headerHeight = "70px";
+---
+
+<header class="site-header">
+  <div class="container header-container">
+    {/* Desktop Navigation (Left) */}
+    <nav class="main-nav desktop-nav" id="desktop-main-nav">
+      <ul>
+        {menuItems.map(item => (
+          <li><a href={item.href}>{item.name}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    {/* Logo (Center on Desktop, Left on Mobile) */}
+    <a href="/" class="logo-link">
+      <img src={userImage} alt={siteTitle} class="user-photo" />
+    </a>
+
+    {/* Desktop Social Links (Right) */}
+    <div class="desktop-social-wrapper"> {/* Added wrapper for alignment */}
+      <ul class="social-links desktop-social">
+        {socialLinks.map(link => (
+          <li><a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={link.name}>{link.label}</a></li>
+        ))}
+      </ul>
+    </div>
+
+    {/* Mobile Menu Toggle Button (Right on Mobile) */}
+    <button
+      class="mobile-menu-toggle"
+      id="mobile-menu-toggle"
+      aria-label="Toggle Menu"
+      aria-expanded="false"
+      aria-controls="mobile-nav-overlay" {/* UPDATED: Controls overlay now */}
+    >
+      ☰ {/* Initial icon set here, JS will update it */}
+    </button>
+  </div>
+</header>
+
+{/* UPDATED: Mobile Navigation Container (Floating Squares) */}
+<div class="mobile-nav-overlay" id="mobile-nav-overlay">
+  {/* Close Button (Positioned top-right within overlay) */}
+  <button
+    class="mobile-menu-close"
+    id="mobile-menu-close-btn"
+    aria-label="Close Menu"
+  >
+    ✕
+  </button>
+
+  {/* Container for the floating squares */}
+  <div class="mobile-nav-squares-container">
+    {/* Main Menu Item Squares */}
+    {menuItems.map(item => (
+      <a href={item.href} class="mobile-nav-item-square menu-item">
+        {item.name}
+      </a>
+    ))}
+    {/* Social Link Squares */}
+    {socialLinks.map(link => (
+      <a href={link.href} target="_blank" rel="noopener noreferrer" class="mobile-nav-item-square social-item" aria-label={link.name}>
+        {link.label} {/* Label updated in frontmatter */}
+      </a>
+    ))}
+  </div>
+</div>
+
+
+<style>
+  .site-header {
+    background-color: var(--footer-bg);
+    padding: 5px 0; /* Keep padding */
+    border-bottom: 2px solid var(--primary-color);
+    box-sizing: border-box;
+    height: {headerHeight}; /* Use variable */
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 1001;
+  }
+
+  .header-container {
+    display: flex;
+    /* Mobile First: Logo left, Toggle right */
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .logo-link {
+    display: flex; /* Keep flex for alignment */
+    align-items: center;
+    text-decoration: none;
+    color: var(--heading-color);
+    transition: color 0.3s ease;
+    height: 100%; /* Ensure link takes full height */
+    /* Mobile: order 1 (default) */
+    /* Desktop: order 2 (set in media query) */
+    flex-shrink: 0; /* Prevent logo from shrinking */
+  }
+
+  .user-photo {
+    height: 60px; /* Keep logo size */
+    width: auto;
+    border-radius: 0;
+    margin-right: 0;
+    border: none;
+    display: block;
+    object-fit: contain;
+  }
+
+  .site-title {
+    display: none;
+  }
+
+  /* --- Desktop Navigation (Left) --- */
+  .main-nav.desktop-nav {
+    display: none; /* Hidden on mobile */
+    /* Desktop: order 1 (set in media query) */
+    flex: 1; /* Allow nav to take space */
+    justify-content: flex-start; /* Align nav items left */
+  }
+
+  .main-nav.desktop-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .main-nav.desktop-nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+    padding: 0.5rem 0;
+  }
+
+  .main-nav.desktop-nav a:hover,
+  .main-nav.desktop-nav a.active {
+    color: var(--primary-color);
+  }
+
+  /* --- Social Links Styling (Desktop Only) --- */
+  .social-links { /* Base styles for desktop */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 1rem;
+    align-items: center; /* Vertically align social icons */
+  }
+
+  .social-links a {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 400;
+    padding: 0.3rem;
+    display: flex; /* Ensure icons align if needed */
+    align-items: center;
+  }
+  .social-links a:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+  }
+
+  /* Desktop Social Links Wrapper (Right) */
+  .desktop-social-wrapper {
+    display: none; /* Hidden on mobile */
+    /* Desktop: order 3 (set in media query) */
+    flex: 1; /* Allow wrapper to take space */
+    display: flex; /* Use flex for internal alignment */
+    justify-content: flex-end; /* Align social links list to the right */
+  }
+
+  .desktop-social {
+    /* Inherits display: flex from .social-links */
+    justify-content: flex-end; /* Align items within the list to the right */
+  }
+
+  /* --- Mobile Menu Toggle (Hamburger in Header) --- */
+  .mobile-menu-toggle {
+    display: flex; /* Show on mobile by default */
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    width: 30px; /* Fixed width */
+    height: 30px; /* Fixed height */
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    z-index: 1002; /* Above header content */
+    /* Mobile: order 2 (default, comes after logo) */
+  }
+
+  /* --- UPDATED: Mobile Navigation Pop-up (Floating Squares) --- */
+
+  /* Overlay Container */
+  .mobile-nav-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9); /* Darker overlay */
+    z-index: 1010; /* Highest z-index */
+    display: flex; /* Use flex for centering */
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0s linear 0.3s;
+    padding: 4rem 1rem 1rem; /* Padding around squares */
+    box-sizing: border-box;
+  }
+
+  .mobile-nav-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-in-out, visibility 0s linear 0s;
+  }
+
+  /* Close Button (Positioned top-right within overlay) */
+  .mobile-menu-close {
+    position: absolute;
+    top: 1.5rem; /* Adjust position */
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 2.2rem; /* Larger close icon */
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    z-index: 1011; /* Above nav content */
+    transition: transform 0.2s ease;
+  }
+  .mobile-menu-close:hover {
+    transform: scale(1.1);
+  }
+
+  /* Container for the squares */
+  .mobile-nav-squares-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow squares to wrap */
+    justify-content: center; /* Center squares horizontally */
+    align-content: center; /* Center squares vertically */
+    gap: 1.5rem; /* Space between squares */
+    width: 100%;
+    max-width: 500px; /* Limit container width */
+    height: 100%;
+    overflow-y: auto; /* Allow scrolling if many items */
+  }
+
+  /* Individual Square Styling */
+  .mobile-nav-item-square {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px; /* Square size */
+    height: 100px;
+    background-color: var(--card-bg); /* Dark background */
+    border: 1px solid var(--primary-color); /* UPDATED: Added neon green outline */
+    border-radius: 12px; /* Rounded corners */
+    color: var(--text-color);
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transition: transform 0.2s ease-out, background-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    padding: 0.5rem; /* Padding inside square */
+    box-sizing: border-box;
+    line-height: 1.2; /* Adjust line height for text */
+  }
+
+  .mobile-nav-item-square:hover {
+    background-color: var(--primary-color);
+    color: var(--black);
+    transform: scale(1.05) translateY(-3px);
+    box-shadow: 0 6px 15px rgba(57, 255, 20, 0.2); /* Neon green shadow */
+    text-decoration: none;
+  }
+
+  /* Specific styles for social icons if needed */
+  .mobile-nav-item-square.social-item {
+    font-size: 1.2rem; /* Make social labels slightly larger */
+  }
+
+
+  /* --- Responsive adjustments --- */
+  /* Mobile Styles (default, up to 767px) */
+  .header-container {
+      padding: 0 1rem;
+  }
+  .main-nav.desktop-nav { display: none; }
+  .desktop-social-wrapper { display: none; }
+  .mobile-menu-toggle { display: flex; }
+  .logo-link { order: 1; }
+  .mobile-menu-toggle { order: 2; }
+
+
+  /* Desktop Styles (768px and up) */
+  @media (min-width: 768px) {
+    .header-container {
+        padding: 0 1.5rem;
+        justify-content: space-between;
+    }
+
+    .main-nav.desktop-nav {
+      display: flex;
+      order: 1;
+      flex: 1 1 0%;
+      justify-content: flex-start;
+    }
+
+    .logo-link {
+      order: 2;
+       margin: 0 1rem;
+    }
+
+    .desktop-social-wrapper {
+      display: flex;
+      order: 3;
+      flex: 1 1 0%;
+      justify-content: flex-end;
+    }
+    .desktop-social {
+        justify-content: flex-end;
+    }
+
+    .mobile-menu-toggle {
+      display: none;
+    }
+  }
+
+  /* Prevent body scroll when mobile menu is open */
+  body.mobile-menu-open {
+    overflow: hidden;
+  }
+
+</style>

@@ -1,0 +1,756 @@
+---
+import Layout from '../layouts/Layout.astro';
+// Import Astro transitions for animations
+import { fade } from 'astro:transitions';
+
+// Simple SVG Icons (Heroicons paths - MIT License) - Modified for currentColor
+const icons = {
+  // Combined YouTube & Podcast Icon (Using YouTube for now)
+  youtubePodcast: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z" /></svg>`,
+  // Removed podcast icon as it's combined
+  computer: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" /></svg>`,
+  growth: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" /></svg>`,
+  money: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>`,
+  system: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0 0 15 0m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m18 0h-1.5m-15.75 0H1.5m19.5 0h-2.25m-15 0a7.5 7.5 0 0 0 7.5 7.5 7.5 7.5 0 0 0 7.5-7.5m-15 0V4.5A2.25 2.25 0 0 1 6.75 2.25h10.5A2.25 2.25 0 0 1 19.5 4.5v7.5m0 0v3.75m-3.75-11.25V2.25m-3.75 0h-1.5m-6 0h-1.5" /></svg>`,
+  check: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>`,
+  writing: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" /></svg>`
+};
+
+// Updated Calendly URL
+const calendlyUrl = 'https://calendly.com/jkrd09/30min';
+
+// Client Logo URLs
+const logoFroydinger = "https://froydingermediagroup.wordpress.com/wp-content/uploads/2025/04/froydingerneonneon.png";
+const logoWinTheNight = "https://froydingermediagroup.wordpress.com/wp-content/uploads/2025/04/logo-on-transparentfinal.png";
+const logoProsapia = "https://prosapiaflooring.com/wp-content/uploads/2025/03/prosap-edited-4.png";
+const logoArcAi = "https://froydingermediagroup.wordpress.com/wp-content/uploads/2025/03/arcana2.png";
+
+// UPDATED Profile Picture URL
+const profilePicUrl = "https://froydingermediagroup.wordpress.com/wp-content/uploads/2025/01/pfpcoffee.png";
+---
+
+<Layout title="Home - Froydinger Media"> {/* Updated Title */}
+  <main>
+    {/* Hero Section */}
+    <section
+      class="section hero scroll-target"
+      style="background-color: var(--hero-bg); color: var(--hero-text); text-align: center; position: relative; overflow: hidden;"
+      transition:animate={fade({ duration: '0.7s' })}
+    >
+       <div class="container">
+        <h1 style="color: var(--hero-text); margin-bottom: 1rem; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Focus on creating.<br> I'll help with the rest.</h1>
+        {/* UPDATED: Added hero-subtext class */}
+        <p class="hero-subtext" style="color: var(--hero-subtext); max-width: 650px; margin: 0 auto 2.5rem auto;"><strong>Digital consulting</strong> for YouTube, <strong>podcast setup</strong>, <strong>blogging help</strong>, and all things creative.<br> No fluff. Just real guidance from Jake.</p>
+        <a
+          href={calendlyUrl}
+          onclick={`Calendly.initPopupWidget({url: '${calendlyUrl}'}); return false;`}
+          class="button"
+          style="width: 50%; margin-left: auto; margin-right: auto;"
+        >
+          Book Free Call
+        </a>
+      </div>
+    </section>
+
+    {/* About Jake Section (Simplified) */}
+    <section id="about" class="section scroll-target" transition:animate={fade({ duration: '0.7s', delay: '0.2s' })}>
+      <div class="container" style="display: grid; grid-template-columns: 1fr; gap: 0; justify-items: center; text-align: center;">
+        <div style="max-width: 700px; margin-left: auto; margin-right: auto;">
+          <h2 style="font-size: 2.8rem; margin-bottom: 1.5rem;">I'm Jake.</h2>
+          <div style="margin-top: 2rem; margin-bottom: 2rem;">
+             <img
+               src={profilePicUrl}
+               alt="Jake Freudinger - Digital Consultant for Creators"
+               style="max-width: 180px; width: 100%; height: auto; border-radius: 50%; display: block; margin: 0 auto; border: 5px solid var(--primary-color); box-shadow: 0 5px 25px rgba(250, 204, 21, 0.2);"
+             >
+          </div>
+
+          {/* --- Button linking to the /about page --- */}
+          <a href="/about" class="button button-secondary" style="margin-bottom: 2rem;">
+            Learn more about me
+          </a>
+
+          {/* --- Social Links Section (Separator removed via CSS) --- */}
+          <div class="social-links" style="margin-top: 2rem;">
+            <p style="font-weight: 600; margin-bottom: 0.75rem;">Connect with me:</p>
+            <div class="social-icon-container">
+              <a href="https://facebook.com/froydinger" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Facebook">
+                Facebook
+              </a>
+              <a href="https://instagram.com/froydinger" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
+                Instagram
+              </a>
+              <a href="https://tiktok.com/@froydinger" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="TikTok">
+                TikTok
+              </a>
+              <a href="https://x.com/froydinger" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="X">
+                X
+              </a>
+              <a href="https://buymeacoffee.com/froydinger" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Buy Me a Coffee">
+                ☕ {/* UPDATED: Use coffee emoji */}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="services" class="section section-alt-bg scroll-target" transition:animate={fade({ duration: '0.7s', delay: '0.2s' })}>
+      <div class="container">
+        <h2 style="text-align: center; margin-bottom: 3.5rem; line-height: 1.3;">
+          How I Can Help
+          <span class="section-subtitle">Consulting & Services</span>
+        </h2>
+        <ul class="service-grid" style="list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; justify-content: center;">
+          <li class="service-card scroll-target">
+            <div class="service-icon" set:html={icons.youtubePodcast}></div>
+            <h3>YouTube & Podcast Strategy</h3>
+            <p>From content ideas and channel optimization to show structure and growth tactics.</p>
+          </li>
+          <li class="service-card scroll-target">
+            <div class="service-icon" set:html={icons.writing}></div>
+            <h3>Blog Building & Writing</h3>
+            <p>Develop your blog's voice, plan content, optimize for readers, and integrate it with your other platforms.</p>
+          </li>
+          <li class="service-card scroll-target">
+            <div class="service-icon" set:html={icons.computer}></div>
+            <h3>Video Editing Workflow</h3>
+            <p>Streamline your editing process to save time and improve quality.</p>
+          </li>
+          <li class="service-card scroll-target">
+            <div class="service-icon" set:html={icons.growth}></div>
+            <h3>Audience Growth & SEO</h3>
+            <p>Implement practical tactics to get your content discovered and engage viewers/readers.</p>
+          </li>
+          <li class="service-card scroll-target">
+            <div class="service-icon" set:html={icons.money}></div>
+            <h3>Monetization Strategy</h3>
+            <p>Explore ways to make your content sustainable and profitable across platforms.</p>
+          </li>
+          <li class="service-card scroll-target">
+            <div class="service-icon" set:html={icons.system}></div>
+            <h3>Content Systems Consulting</h3>
+            <p>Build efficient workflows for planning, creation (video, audio, written), and distribution.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="process" class="section section-alt-bg scroll-target" transition:animate={fade({ duration: '0.7s', delay: '0.2s' })}>
+      <div class="container">
+        <h2 style="text-align: center; margin-bottom: 4rem; line-height: 1.3;">
+          Easy Consulting
+          <span class="section-subtitle">Getting Started</span>
+        </h2>
+        <ol style="list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2.5rem; text-align: center;">
+          <li class="scroll-target">
+            <div class="step-number">1</div>
+            <h3>Book a Discovery Call</h3>
+            <p>We'll discuss your goals, challenges, and see if we're a good fit. No pressure, just conversation.</p>
+            <a
+              href={calendlyUrl}
+              onclick={`Calendly.initPopupWidget({url: '${calendlyUrl}'}); return false;`}
+              class="button button-secondary"
+              style="margin-top: 1.5rem; width: 50%; margin-left: auto; margin-right: auto;"
+            >
+              Book Free Call
+            </a>
+          </li>
+          <li class="scroll-target">
+            <div class="step-number">2</div>
+            <h3>Get Your Custom Strategy</h3>
+            <p>If we move forward, I'll develop a personalized plan tailored to your specific needs and content.</p>
+            <a href="/pricing" class="link-secondary" style="margin-top: 1rem; display: inline-block;">
+              Check Out Your Options
+            </a>
+          </li>
+          <li class="scroll-target">
+            <div class="step-number">3</div>
+            <h3>Implement & Grow</h3>
+            <p>Put the plan into action with ongoing guidance and support from me as needed.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="faq" class="section section-alt-bg scroll-target" transition:animate={fade({ duration: '0.7s', delay: '0.2s' })}>
+      <div class="container" style="max-width: 750px;">
+        <h2 style="text-align: center; margin-bottom: 3rem;">Frequently Asked Questions</h2>
+        <div class="faq-container">
+          <details class="faq-item scroll-target">
+            <summary>What exactly do you offer? <span class="faq-icon">+</span></summary>
+            <p>I offer 1-on-1 <strong>digital consulting</strong> sessions focused on strategy, workflow optimization, and practical advice for your content (YouTube, podcasts, blogs, written content, etc.). I also offer <strong>website design</strong> services. I don't create content *for* you, but I guide you on how to improve yours.</p>
+          </details>
+          <details class="faq-item scroll-target">
+            <summary>What are your rates? <span class="faq-icon">+</span></summary>
+            <p>Consulting packages are tailored to your needs. We'll discuss pricing and options during the Discovery Call to find the best fit for your budget and goals. You can also see standard rates for <strong>affordable consulting</strong> and <strong>website design</strong> on the <a href="/pricing">Pricing page</a>.</p>
+          </details>
+          <details class="faq-item scroll-target">
+            <summary>What kind of results can I expect? <span class="faq-icon">+</span></summary>
+            <p>Results depend on your commitment and implementation. My goal is to provide you with clear, actionable strategies to improve your content quality, grow your audience, and streamline your processes. I focus on sustainable growth, not overnight miracles.</p>
+          </details>
+          <details class="faq-item scroll-target">
+            <summary>Do you work with beginners? <span class="faq-icon">+</span></summary>
+            <p>Absolutely! Whether you're just starting out or looking to level up an established channel, podcast, or blog, I can help tailor a strategy for your specific stage.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    {/* --- REDESIGNED Website Design Section --- */}
+    <section id="webdev" class="section scroll-target" transition:animate={fade({ duration: '0.7s', delay: '0.2s' })}>
+      <div class="container" style="text-align: center;">
+        <h2 style="line-height: 1.3;">
+          Every Great Idea Needs a Website
+          <span class="section-subtitle">Website Design Services</span>
+        </h2>
+        <p style="max-width: 700px; margin: 0 auto 2rem auto; font-size: 1.1rem;">Beyond content strategy, I also build clean, effective websites for small businesses and creators – just like this one! Get a professional online presence with my <strong>website design</strong> services.</p>
+
+        <h3 style="margin-top: 3rem; margin-bottom: 2rem;">Recent Builds:</h3>
+
+        {/* --- Updated Portfolio Layout (Flexbox) --- */}
+        <div class="portfolio-flex-container">
+          <div class="portfolio-item scroll-target">
+            <img src={logoFroydinger} alt="Froydinger Media Website Example" class="portfolio-logo">
+            <span class="portfolio-text"><strong>This site!</strong></span>
+          </div>
+          <a href="https://winthenight.org" target="_blank" rel="noopener noreferrer" class="portfolio-item scroll-target">
+            <img src={logoWinTheNight} alt="Win The Night Website Design Example" class="portfolio-logo">
+            <span class="portfolio-text"><strong>Win The Night</strong></span>
+          </a>
+          <a href="https://askarc.xyz" target="_blank" rel="noopener noreferrer" class="portfolio-item scroll-target">
+            <img src={logoArcAi} alt="ArcAi Website Design Example" class="portfolio-logo">
+            <span class="portfolio-text"><strong>ArcAi</strong></span>
+          </a>
+          <a href="https://prosapiaflooring.com" target="_blank" rel="noopener noreferrer" class="portfolio-item scroll-target">
+            <img src={logoProsapia} alt="Prosapia Flooring Website Design Example" class="portfolio-logo">
+            <span class="portfolio-text"><strong>Prosapia Flooring</strong></span>
+          </a>
+        </div>
+        {/* --- End Updated Portfolio Layout --- */}
+
+        <a
+          href={calendlyUrl}
+          onclick={`Calendly.initPopupWidget({url: '${calendlyUrl}'}); return false;`}
+          class="button"
+          style="margin-top: 3rem; width: 60%; margin-left: auto; margin-right: auto;"
+        >
+          Let's Talk Websites
+        </a>
+        <a href="/pricing" class="link-secondary" style="margin-top: 1rem; display: block;">
+          How much are websites?
+        </a>
+      </div>
+    </section>
+    {/* --- END REDESIGNED Website Design Section --- */}
+
+
+    <section id="contact" class="section scroll-target" style="background-color: var(--cta-bg); color: var(--cta-text); text-align: center; position: relative; overflow: hidden;" transition:animate={fade({ duration: '0.7s', delay: '0.2s' })}>
+      <div class="container">
+        <h2 style="color: var(--black);">Ready to find your strategy?</h2>
+        {/* UPDATED: Added contact-subtext class */}
+        <p class="contact-subtext" style="color: black; max-width: 600px; margin: 0 auto 2.5rem auto;">Stop guessing and start building a clear path forward with simple consulting. Book your no-obligation Discovery Call today.</p>
+        <a
+          href={calendlyUrl}
+          onclick={`Calendly.initPopupWidget({url: '${calendlyUrl}'}); return false;`}
+          class="button"
+          style="background-color: var(--black); color: var(--primary-color); border: 2px solid var(--primary-color); width: 50%; margin-left: auto; margin-right: auto;"
+        >
+          Book Free Call
+        </a>
+      </div>
+    </section>
+  </main>
+</Layout>
+
+
+<style>
+  /* Hero Section Styles */
+  .hero {
+    padding-bottom: 5rem; /* Adjust as needed */
+    border-bottom: 5px solid var(--hero-border); /* Yellow border */
+  }
+
+  .hero h1 {
+    color: var(--hero-text); /* White text */
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Text shadow for readability */
+  }
+
+  .hero p.hero-subtext { /* Target specifically */
+    font-size: 1.25rem; /* Default size */
+    color: var(--hero-subtext); /* Slightly muted text */
+    max-width: 650px;
+    margin: 0 auto 2.5rem auto; /* Centered with margin below button */
+  }
+
+  /* About Section Styles */
+  #about {
+
+  }
+
+  #about h2 {
+    font-size: 2.8rem; /* Larger heading */
+    margin-bottom: 1.5rem;
+  }
+
+  #about .button {
+    margin-bottom: 2rem; /* Space below button */
+  }
+
+  /* Social Links Styling (Separator Removed) */
+  .social-links {
+    /* REMOVED: border-top: 1px solid var(--border-color); */
+    padding-top: 0; /* Adjusted padding */
+    margin-top: 2rem;
+  }
+
+  .social-icon-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 1.5rem; /* Space between links */
+    justify-content: center; /* Center the links */
+  }
+
+  .social-link {
+    color: var(--text-muted); /* Muted color for links */
+    text-decoration: none;
+    display: inline-block; /* Make it a block for transitions */
+    transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
+    font-size: 0.95rem;
+    font-weight: 500; /* Slightly bolder */
+  }
+
+  .social-link:hover {
+    color: var(--primary-color); /* Yellow on hover */
+    transform: scale(1.05); /* Slight scale on hover */
+    text-decoration: underline;
+  }
+
+
+  /* Services Section Styles */
+  #services {
+
+  }
+
+  #services h2 {
+    text-align: center;
+    margin-bottom: 3.5rem;
+    line-height: 1.3; /* Slightly tighter line height */
+  }
+
+  .section-subtitle { /* Style for subtitles (like "Consulting & Services") */
+    display: block;
+    font-size: 0.8em;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+    letter-spacing: 0.5px; /* Subtle letter spacing */
+  }
+
+  .service-grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* Responsive grid */
+    gap: 2rem; /* Space between grid items */
+    justify-content: center; /* Center the grid */
+  }
+
+  .service-card {
+    background: var(--card-bg); /* Darker background for cards */
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow); /* Subtle shadow */
+    border: 1px solid var(--card-border); /* Darker border */
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out;
+    position: relative;
+    overflow: hidden; /* For the hover effect */
+    z-index: 1; /* Ensure card is above the pseudo-element */
+    display: flex;
+    flex-direction: column; /* Stack icon, title, and description */
+    align-items: center; /* Center horizontally */
+    text-align: center; /* Center text */
+  }
+
+  .service-card:before { /* Pseudo-element for hover effect */
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent); /* Yellow gradient */
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  .service-card:hover {
+    transform: translateY(-8px); /* Lift on hover */
+    box-shadow: var(--card-shadow-hover); /* More pronounced shadow */
+    border-color: #facc1580; /* Slightly transparent yellow border */
+  }
+
+  .service-card:hover:before {
+    opacity: 0.6; /* Show the gradient on hover */
+  }
+
+  .service-icon {
+    display: block;
+    margin-bottom: 1rem;
+    color: var(--primary-color); /* Yellow icon */
+    line-height: 1; /* Prevent extra space below icon */
+    flex-shrink: 0; /* Prevent icon from shrinking */
+    width: 40px; /* Consistent icon size */
+    height: 40px;
+  }
+
+  .service-icon svg { /* If using SVG icons */
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .service-card h3 {
+    margin-bottom: 0.75rem;
+    color: var(--heading-text); /* White title */
+    flex-shrink: 0; /* Prevent title from shrinking */
+  }
+
+  .service-card p { /* Description initially hidden */
+    color: var(--text-muted); /* Muted description */
+    font-size: 0.95rem;
+    margin: 0;
+    padding: 0;
+    max-height: 0; /* Initially hidden */
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, margin-top 0.4s ease-in-out;
+    width: 100%; /* Ensure full width */
+  }
+
+  .service-card:hover p { /* Show description on hover */
+    margin-top: 0.75rem; /* Add top margin when visible */
+    max-height: 150px; /* Allow description to expand */
+    opacity: 1;
+  }
+
+
+  /* Process Section Styles */
+  #process {
+
+  }
+
+  #process h2 {
+    text-align: center;
+    margin-bottom: 4rem;
+    line-height: 1.3;
+  }
+
+  #process ol {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2.5rem;
+    text-align: center;
+  }
+
+  .step-number {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--step-number-color); /* Black number */
+    background-color: var(--step-number-bg); /* Yellow background */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    line-height: 60px; /* Vertically center number */
+    margin: 0 auto 1.5rem; /* Centered with margin below */
+    font-family: var(--font-heading); /* Use heading font */
+    box-shadow: 0 0 15px #facc154d; /* Subtle shadow */
+  }
+
+  #process h3 {
+    margin-bottom: 0.75rem; /* Space below heading */
+  }
+
+  #process p {
+    color: var(--text-muted); /* Muted text color */
+  }
+
+  .link-secondary { /* Style for secondary links (like "Check Out Your Options") */
+    color: var(--primary-color); /* Yellow */
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+  }
+
+  .link-secondary:hover {
+    color: var(--primary-color-dark); /* Darker yellow */
+    text-decoration: none;
+  }
+
+
+  /* FAQ Section Styles */
+  #faq {
+
+  }
+
+  #faq h2 {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .faq-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Space between FAQ items */
+  }
+
+  .faq-item {
+    background: var(--card-bg); /* Darker background */
+    padding: 0; /* No padding on the container */
+    border-radius: 8px;
+    border: 1px solid var(--faq-border); /* Darker border */
+    box-shadow: 0 2px 5px #0003; /* Subtle shadow */
+    overflow: hidden; /* Hide content initially */
+    transition: background-color 0.3s ease-in-out;
+  }
+
+  .faq-item summary {
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none; /* Remove default summary marker */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--faq-summary-color); /* White text */
+    padding: 1.5rem;
+    transition: background-color 0.2s ease-in-out;
+  }
+.faq-item summary:hover {
+background-color: #facc150d; /* Subtle yellow background on hover */
+}
+
+.faq-item summary::-webkit-details-marker {
+display: none; /* Hide default summary marker */
+}
+
+.faq-icon {
+font-size: 1.8rem;
+line-height: 1;
+color: var(--faq-icon-color); /* Yellow icon /
+transition: transform 0.3s ease-in-out;
+margin-left: 1rem; / Space between text and icon /
+pointer-events: none; / Prevent icon from being clickable */
+}
+
+.faq-item[open] > summary { /* Style for open FAQ item /
+border-bottom: 1px solid var(--faq-border); / Add a bottom border */
+}
+
+.faq-item[open] .faq-icon {
+transform: rotate(45deg); /* Rotate icon when open */
+}
+
+.faq-item p { /* Content initially hidden /
+color: var(--text-muted); / Muted text color /
+font-size: 0.95rem;
+margin: 0;
+padding: 0 1.5rem;
+max-height: 0;
+opacity: 0;
+overflow: hidden;
+transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out 0.1s, padding 0.4s ease-in-out; / Delay opacity transition /
+box-sizing: border-box; / Include padding in height calculation */
+}
+
+.faq-item[open] > p { /* Show content when open /
+max-height: 200px; / Allow content to expand /
+opacity: 1;
+padding-top: 1.5rem; / Add padding when visible */
+padding-bottom: 1.5rem;
+transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, padding 0.4s ease-in-out;
+}
+
+/* --- REDESIGNED Web Dev Section Styles --- */
+#webdev {
+  /* Keep existing section padding */
+}
+
+#webdev h2 {
+  line-height: 1.3;
+}
+
+#webdev p {
+  max-width: 700px;
+  margin: 0 auto 2rem auto;
+  font-size: 1.1rem;
+}
+
+#webdev h3 {
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+}
+
+/* New Flexbox Container for Portfolio Items */
+.portfolio-flex-container {
+  display: flex;
+  flex-wrap: wrap; /* Allow items to wrap */
+  justify-content: center; /* Center items horizontally */
+  gap: 2rem; /* Space between items */
+  max-width: 900px; /* Limit overall width */
+  margin: 0 auto; /* Center the container */
+}
+
+/* Styles for Individual Portfolio Items */
+.portfolio-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  text-align: center;
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 1.1rem;
+  min-height: 200px;
+  box-sizing: border-box;
+  text-decoration: none;
+  flex-basis: 200px; /* Base width for flex items */
+  flex-grow: 1; /* Allow items to grow */
+  max-width: 250px; /* Max width to prevent excessive stretching */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+a.portfolio-item:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--primary-color);
+  background-color: #1f1f1f;
+  color: var(--primary-color-dark);
+}
+
+.portfolio-item:not(a):hover { /* Prevent hover effects on non-link items */
+  transform: none;
+  box-shadow: var(--card-shadow);
+  border-color: var(--card-border);
+  background-color: var(--card-bg);
+}
+
+.portfolio-logo {
+  display: block;
+  height: 80px;
+  width: auto;
+  max-width: 80%;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  margin-top: 0;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.portfolio-text { /* Renamed from portfolio-link-text */
+  font-size: 1rem;
+  color: var(--text-color);
+  margin-top: 0;
+}
+
+a.portfolio-item:hover .portfolio-text {
+  color: var(--primary-color);
+}
+
+.portfolio-item:not(a):hover .portfolio-text {
+  color: var(--text-color);
+}
+
+.portfolio-text strong {
+  font-weight: 600;
+}
+/* --- END REDESIGNED Web Dev Section Styles --- */
+
+
+/* Contact/CTA Section Styles */
+#contact {
+background-color: var(--cta-bg); /* Yellow background */
+color: var(--cta-text); /* Black text */
+text-align: center;
+position: relative;
+overflow: hidden;
+}
+
+#contact h2 {
+color: var(--black); /* Black heading */
+}
+
+#contact p.contact-subtext { /* Target specifically */
+font-size: 1.2rem; /* Default size */
+color: black; /* Black text */
+max-width: 600px;
+margin: 0 auto 2.5rem auto; /* Centered with margin below button */
+}
+
+#contact .button { /* Style for the button in this section */
+background-color: var(--black); /* Black background */
+color: var(--primary-color); /* Yellow text */
+border: 2px solid var(--primary-color); /* Yellow border */
+}
+
+/* ... other styles ... */
+
+/* Media Queries for Responsiveness */
+@media (max-width: 992px) { /* Medium screens and down */
+.hero .button,
+#process .button,
+#contact .button {
+width: 60%; /* Adjust button width */
+}
+#webdev .button {
+width: 70%; /* Adjust button width */
+}
+}
+
+@media (max-width: 768px) { /* Smaller screens and down */
+.hero .button,
+#process .button,
+#contact .button,
+#webdev .button {
+width: 80%; /* Adjust button width */
+}
+/* Adjust portfolio item sizing for smaller screens */
+.portfolio-item {
+  flex-basis: calc(50% - 1rem); /* Two columns on medium screens */
+  max-width: calc(50% - 1rem);
+}
+/* UPDATED: Reduce CTA subtext size on mobile */
+.hero p.hero-subtext,
+#contact p.contact-subtext {
+  font-size: 1.1rem; /* Smaller font size for mobile */
+}
+}
+
+@media (max-width: 480px) { /* Very small screens and down */
+.hero .button,
+#process .button,
+#contact .button,
+#webdev .button {
+width: 90%; /* Adjust button width */
+}
+/* Stack portfolio items on very small screens */
+.portfolio-item {
+  flex-basis: 100%;
+  max-width: 100%;
+}
+/* UPDATED: Further reduce CTA subtext size on very small screens */
+.hero p.hero-subtext,
+#contact p.contact-subtext {
+  font-size: 1rem; /* Even smaller font size */
+}
+}
+</style>

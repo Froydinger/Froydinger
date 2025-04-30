@@ -1,0 +1,480 @@
+---
+// Import Astro View Transitions component
+import { ViewTransitions } from 'astro:transitions';
+// Import Header component
+import Header from '../components/Header.astro';
+
+// Define props if needed, e.g., title
+interface Props {
+	title: string; // Page specific title part
+}
+const { title } = Astro.props;
+
+// Base site name for branding
+const siteName = "Froydinger Media"; // Technical name & Display name
+// UPDATED: New site title format for browser tabs
+const pageTitle = `${title} | ${siteName} - Consulting & Creating`; // Construct full page title
+
+// User's logo URL for favicon
+const userImageUrl = "https://2.gravatar.com/avatar/8adf82edee6c9d7487046460ed0bf7490c1ad8ecc177ad6456c3a87778fdbabf?size=80";
+
+// UPDATED: Calculate header height
+const headerHeight = "70px";
+
+// UPDATED: Enhanced Meta Description with Keywords
+const metaDescription = `Expert digital consulting for YouTube, podcasts, blogging, and website design. Get simple, actionable content strategy and growth guidance from Jake at ${siteName}. Affordable options available.`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    {/* UPDATED Meta Description */}
+    <meta name="description" content={metaDescription} />
+    <meta name="viewport" content="width=device-width" />
+    {/* Updated favicon link to use user's logo */}
+    <link rel="icon" type="image/png" href={userImageUrl} />
+    <meta name="generator" content={Astro.generator} />
+    {/* UPDATED title structure */}
+    <title>{pageTitle}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+
+    {/* Add Astro View Transitions component */}
+    <ViewTransitions />
+
+    {/* Calendly Pop-up Widget Styles */}
+    <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+
+    {/* --- Google AdSense Script --- */}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3623262505688551"
+         crossorigin="anonymous"></script>
+    {/* --- End Google AdSense Script --- */}
+
+    {/* --- ADDED: Google tag (gtag.js) --- */}
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JWVJ8WKWSB"></script>
+    <script is:inline> {/* Use is:inline for inline scripts in Astro */}
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JWVJ8WKWSB');
+    </script>
+    {/* --- End Google tag (gtag.js) --- */}
+
+  </head>
+  <body>
+    {/* Add Header component here */}
+    <Header />
+    {/* Main element no longer has global top padding */}
+    <main>
+      <slot />
+    </main>
+
+    {/* UPDATED Footer with Legal Links */}
+    <footer class="site-footer-main">
+        <div class="container footer-container">
+            <p>&copy; {new Date().getFullYear()} {siteName}. All rights reserved.</p> {/* Use siteName */}
+            <nav class="footer-nav">
+                <a href="/privacy-policy">Privacy Policy</a>
+                <a href="/terms-conditions">Terms & Conditions</a>
+            </nav>
+        </div>
+    </footer>
+
+    {/* Calendly Pop-up Widget Script */}
+    <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+
+    {/* Global Mobile Menu & Scroll Focus Script */}
+    <script define:vars={{ headerHeight }}>
+      // --- Mobile Menu Pop-up Logic (Floating Squares) ---
+      function setupMobileMenu() {
+        // console.log('Attempting mobile menu setup...'); // Debug log
+
+        const menuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+        const closeButton = document.getElementById('mobile-menu-close-btn');
+        const squaresContainer = document.querySelector('.mobile-nav-squares-container'); // Target the squares container
+
+        // Element existence check
+        if (!menuToggle || !mobileNavOverlay || !closeButton || !squaresContainer) {
+          // console.error("Mobile menu elements missing. Setup aborted.");
+          return;
+        }
+        // console.log('Mobile menu elements found.'); // Debug log
+
+        const openMenu = () => {
+          // console.log('Opening menu...'); // Debug log
+          mobileNavOverlay.classList.add('is-open');
+          document.body.classList.add('mobile-menu-open');
+          menuToggle.setAttribute('aria-expanded', 'true');
+          menuToggle.textContent = '✕'; // Change icon to X
+        };
+
+        const closeMenu = () => {
+          // console.log('Closing menu...'); // Debug log
+          mobileNavOverlay.classList.remove('is-open');
+          document.body.classList.remove('mobile-menu-open');
+          menuToggle.setAttribute('aria-expanded', 'false');
+          menuToggle.textContent = '☰'; // Change icon back to hamburger
+        };
+
+        // --- Use addEventListener for robustness ---
+        // Remove potential old listeners first (simple approach)
+        const newToggle = menuToggle.cloneNode(true);
+        menuToggle.parentNode.replaceChild(newToggle, menuToggle);
+        newToggle.addEventListener('click', openMenu);
+
+        const newCloseButton = closeButton.cloneNode(true);
+        closeButton.parentNode.replaceChild(newCloseButton, closeButton);
+        newCloseButton.addEventListener('click', closeMenu);
+
+        // Close on overlay click
+        mobileNavOverlay.addEventListener('click', (event) => {
+            if (event.target === mobileNavOverlay) {
+                // console.log('Clicked overlay background.'); // Debug log
+                closeMenu();
+            }
+        });
+
+        // UPDATED: Remove closeMenu() call from link click listener
+        // Let the browser handle navigation and page transition handle overlay removal
+        squaresContainer.addEventListener('click', (event) => {
+            if (event.target.closest('a.mobile-nav-item-square')) {
+                // console.log('Clicked menu link square. Allowing navigation.'); // Debug log
+                // No closeMenu() call here
+            }
+        });
+        // --- End addEventListener ---
+
+        // Ensure initial state is correct
+        const isOpen = mobileNavOverlay.classList.contains('is-open');
+        newToggle.setAttribute('aria-expanded', String(isOpen));
+        newToggle.textContent = isOpen ? '✕' : '☰'; // Set initial icon based on state
+        if (isOpen) {
+            document.body.classList.add('mobile-menu-open');
+        } else {
+            document.body.classList.remove('mobile-menu-open');
+        }
+        // console.log('Mobile menu setup complete. Initial state checked.'); // Debug log
+      }
+      // --- End Mobile Menu Pop-up Logic ---
+
+
+      // --- Scroll Focus Logic ---
+      let observer = null;
+
+      function setupScrollFocus() {
+        const targets = document.querySelectorAll('.scroll-target');
+        if (!targets.length) return;
+
+        if (observer) {
+          observer.disconnect();
+        }
+
+        const options = {
+          root: null,
+          rootMargin: '-30% 0px -30% 0px',
+          threshold: 0
+        };
+
+        observer = new IntersectionObserver((entries, observer) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.remove('is-out-of-focus');
+            } else {
+              entry.target.classList.add('is-out-of-focus');
+            }
+          });
+        }, options);
+
+        targets.forEach(target => {
+          observer.observe(target);
+        });
+        // console.log('Scroll focus observer initialized.');
+      }
+      // --- End Scroll Focus Logic ---
+
+
+      function initializePageScripts() {
+        // console.log('Initializing page scripts...');
+        setupMobileMenu();
+        setupScrollFocus();
+      }
+
+      // Run on initial load
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializePageScripts);
+      } else {
+        initializePageScripts(); // DOM already loaded
+      }
+
+      // Re-run after Astro page transitions
+      document.addEventListener('astro:after-swap', () => {
+        // console.log('astro:after-swap triggered for layout scripts');
+        // Use requestAnimationFrame to ensure DOM is updated after swap
+        requestAnimationFrame(initializePageScripts);
+      });
+
+    </script>
+  </body>
+</html>
+<style is:global>
+  :root {
+    /* Black & Yellow Theme (Simplified) */
+    /* UPDATED: Neon Green Accent */
+    --primary-color: #39FF14; /* Neon Green */
+    --primary-color-dark: #00FF00; /* Slightly darker Neon Green */
+    --background-color: #000000; /* Solid Black */
+    --card-bg: #111111; /* Very Dark Gray for cards */
+    --text-color: #F9FAFB; /* Off-White */
+    --heading-color: #FFFFFF; /* White */
+    --text-muted: #A1A1AA; /* Gray (Zinc 400) */
+    --border-color: #27272A; /* Darker Gray border (Zinc 800) */
+    --accent-light: #BBF7D0; /* Very Light Green */
+    --white: #FFFFFF;
+    --black: #000000;
+
+    /* Semantic Variables (Simplified Black & Yellow Theme) */
+    --body-bg: var(--background-color);
+    --body-text: var(--text-color);
+    --heading-text: var(--heading-color);
+    --link-color: var(--primary-color);
+    --link-hover-color: var(--primary-color-dark);
+    --button-bg: var(--primary-color);
+    --button-text: var(--black); /* Black text on yellow */
+    --button-hover-bg: var(--primary-color-dark);
+    --button-hover-text: var(--white); /* White text on yellow hover */
+    --button-secondary-bg: var(--card-bg); /* Use card bg for secondary */
+    --button-secondary-text: var(--primary-color); /* Yellow text */
+    --button-secondary-hover-bg: #27272A; /* Slightly darker card bg */
+    --button-secondary-hover-text: var(--white); /* White text on secondary hover */
+    --section-bg-alt: var(--card-bg); /* Use card bg for alternating sections */
+    --footer-bg: #0A0A0A; /* Slightly lighter black for footer */
+    --footer-text: var(--text-muted);
+    --footer-border: var(--border-color);
+
+    /* Component Specific */
+    --card-border: var(--border-color);
+    --card-shadow: 0 4px 15px rgba(0,0,0,0.3); /* Darker shadow */
+    --card-shadow-hover: 0 8px 25px rgba(0,0,0,0.4);
+    --faq-border: var(--border-color);
+    --faq-summary-color: var(--heading-text);
+    --faq-icon-color: var(--primary-color);
+    --step-number-bg: var(--primary-color); /* Yellow background */
+    --step-number-color: var(--black); /* Black number */
+    --hero-bg: var(--background-color); /* Keep hero bg dark */
+    --hero-text: var(--white);
+    --hero-subtext: var(--text-muted);
+    --hero-border: var(--primary-color); /* Yellow border */
+    --cta-bg: var(--primary-color); /* Yellow CTA */
+    --cta-text: var(--black); /* Black text */
+    --cta-subtext: #78350F; /* Dark Amber for subtext contrast */
+
+    /* Updated Typography */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-heading: 'Poppins', sans-serif;
+
+    /* UPDATED: Header Height Variable */
+    --header-height: {headerHeight}; /* Define globally */
+  }
+
+  html {
+    font-family: var(--font-sans);
+    background: var(--body-bg);
+    color: var(--body-text);
+    scroll-behavior: smooth; /* Enable smooth scrolling for anchor links */
+  }
+
+  body {
+    margin: 0;
+    padding: 0; /* Ensure no padding on body */
+    line-height: 1.6;
+    background-color: var(--body-bg);
+    color: var(--body-text);
+    overflow-x: hidden;
+    display: flex; /* Use flexbox for sticky footer */
+    flex-direction: column; /* Stack elements vertically */
+    min-height: 100vh; /* Ensure body takes at least full viewport height */
+  }
+  /* Prevent body scroll when mobile menu is open */
+  body.mobile-menu-open {
+    overflow: hidden;
+  }
+
+
+  main {
+    display: block; /* Ensure main behaves as a block element */
+    flex-grow: 1; /* Allow main content to grow and push footer down */
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--heading-text);
+    line-height: 1.2;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  h1 { font-size: 2.8rem; font-weight: 900; }
+  h2 { font-size: 2.2rem; }
+  h3 { font-size: 1.5rem; }
+  p { margin-bottom: 1rem; color: var(--text-muted); }
+  p strong { color: var(--body-text); }
+
+  a {
+    color: var(--link-color);
+    text-decoration: none;
+    font-weight: 700;
+    transition: color 0.3s ease-in-out; /* Smooth link color transition */
+  }
+  a:hover {
+    color: var(--link-hover-color);
+    text-decoration: underline;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .section {
+    padding: 5rem 0;
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+  }
+  .section-alt-bg {
+     background-color: var(--section-bg-alt);
+     border-top: 1px solid var(--border-color);
+     border-bottom: 1px solid var(--border-color);
+  }
+
+  .hero {
+    padding-bottom: 5rem;
+    border-bottom: 5px solid var(--hero-border);
+  }
+
+
+  .button {
+    display: inline-block;
+    padding: 0.85rem 1.8rem;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    font-weight: 700;
+    font-family: var(--font-sans);
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out; /* Smoother ease */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+  .button:hover {
+    background-color: var(--button-hover-bg);
+    color: var(--button-hover-text);
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(250, 204, 21, 0.2);
+  }
+  .button:active {
+     transform: translateY(0px);
+     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .button-secondary {
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-text);
+    border: 2px solid var(--border-color);
+  }
+  .button-secondary:hover {
+    background-color: var(--button-secondary-hover-bg);
+    color: var(--button-secondary-hover-text);
+    border-color: var(--primary-color);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Updated Footer Styling */
+  .site-footer-main {
+    padding: 2rem 0; /* Adjusted padding */
+    text-align: center;
+    background-color: var(--footer-bg);
+    color: var(--footer-text);
+    border-top: 1px solid var(--footer-border);
+    position: relative;
+    z-index: 1;
+    margin-top: auto; /* Pushes footer to bottom in flex container */
+  }
+  .footer-container {
+    display: flex;
+    flex-direction: column; /* Stack copyright and nav */
+    align-items: center;
+    gap: 0.75rem; /* Space between copyright and nav */
+  }
+  .footer-nav {
+    display: flex;
+    gap: 1.5rem; /* Space between links */
+  }
+  .footer-nav a {
+    color: var(--text-muted);
+    font-weight: 400; /* Lighter weight for footer links */
+    font-size: 0.9rem;
+  }
+  .footer-nav a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+  }
+
+
+  /* --- Calendly Pop-up Styling --- */
+  .calendly-popup-content {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+  }
+  /* --- End Calendly Pop-up Styling --- */
+
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    h1 { font-size: 2.2rem; }
+    h2 { font-size: 1.9rem; }
+    h3 { font-size: 1.3rem; }
+    .section {
+        padding: 4rem 0;
+    }
+    .hero {
+        padding-bottom: 4rem;
+    }
+    .container { padding: 0 1rem; }
+  }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 1.9rem; }
+    h2 { font-size: 1.6rem; }
+    .button { width: 100%; box-sizing: border-box; padding: 0.75rem 1.5rem; }
+    .section { padding: 3rem 0; }
+    .hero { padding-bottom: 3rem; }
+    .footer-nav {
+        flex-direction: column; /* Stack links vertically on small screens */
+        gap: 0.5rem;
+    }
+  }
+
+  /* Scroll Focus Effect */
+  .scroll-target {
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .is-out-of-focus {
+    opacity: 0.5;
+    /* transform: scale(0.98); */ /* Optional subtle scale */
+  }
+
+</style>

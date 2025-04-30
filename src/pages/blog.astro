@@ -1,0 +1,552 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { fade } from 'astro:transitions';
+import { formatDate } from '../utils.js'; // Import formatDate helper
+
+// Define the type for a WordPress post item from the REST API
+interface WordPressPost {
+  id: number;
+  date_gmt: string; // Use GMT date for consistency
+  slug: string;
+  link: string; // Link to the original post on WordPress
+  title: {
+    rendered: string;
+  };
+  content: {
+    rendered: string; // Full content HTML
+  };
+  excerpt: {
+    rendered: string; // Excerpt HTML
+  };
+  _embedded?: { // Embedded data when using ?_embed=1
+    'wp:featuredmedia'?: {
+        source_url?: string; // Featured image URL
+        alt_text?: string;
+        media_details?: { // Include media details for better thumbnails if available
+            sizes?: {
+                thumbnail?: { source_url: string };
+                medium?: { source_url: string };
+                // Add other sizes if needed
+            }
+        }
+    }[];
+  };
+}
+
+// Define the structure for the data passed to the client script
+// This is just for clarity in the server-side code
+interface ClientPostData {
+  id: number;
+  date_gmt: string;
+  slug: string;
+  title: { rendered: string };
+  formattedDate: string;
+  featuredImageUrl: string | null;
+  featuredImageAlt: string;
+  excerptHtml: string;
+}
+
+
+let allPosts: ClientPostData[] = []; // Use the defined interface here
+let fetchError: string | null = null;
+const wordpressSiteDomain = 'froydingermediagroup.wordpress.com';
+// Fetch up to 100 posts, ensure _embed=1 is present for featured media
+const wordpressApiUrl = `https://public-api.wordpress.com/wp/v2/sites/${wordpressSiteDomain}/posts?_embed=1&per_page=100`;
+
+try {
+  const response = await fetch(wordpressApiUrl);
+  if (!response.ok) {
+    let errorBody = '';
+    try { errorBody = await response.text(); } catch (_) { /* ignore */ }
+    throw new Error(`Failed to fetch from WordPress API: ${response.status} ${response.statusText}. Response: ${errorBody.substring(0, 200)}`);
+  }
+
+  const data: WordPressPost[] = await response.json();
+
+  if (!Array.isArray(data)) {
+    throw new Error("WordPress API response was not an array as expected.");
+  }
+
+  // Pre-process posts slightly for easier client-side use
+  allPosts = data.map(post => ({
+    id: post.id,
+    date_gmt: post.date_gmt,
+    slug: post.slug,
+    title: post.title, // Keep the title object
+    // Pre-format date
+    formattedDate: formatDate(post.date_gmt),
+    // Simplify featured image URL selection (prefer medium, then thumbnail, then full)
+    featuredImageUrl: post._embedded?.['wp:featuredmedia']?.[0]?.media_details?.sizes?.medium?.source_url
+                     || post._embedded?.['wp:featuredmedia']?.[0]?.media_details?.sizes?.thumbnail?.source_url
+                     || post._embedded?.['wp:featuredmedia']?.[0]?.source_url
+                     || null, // Use null if no image found
+    featuredImageAlt: post._embedded?.['wp:featuredmedia']?.[0]?.alt_text || post.title.rendered || "Blog post image",
+    // Clean up excerpt
+    excerptHtml: (post.excerpt?.rendered || '<p>No excerpt available.</p>').replace(/^<p>|<\/p>$/g, '') + '...'
+  }));
+
+  if (allPosts.length > 0 && (!allPosts[0].title?.rendered || !allPosts[0].slug || !allPosts[0].date_gmt)) {
+      console.warn("Fetched posts might be missing expected fields (title.rendered, slug, date_gmt). Check WordPress REST API structure.");
+  }
+
+} catch (error) {
+  console.error("Error fetching or parsing WordPress REST API data:", error);
+   if (error instanceof Error) {
+      if (error.message.includes('fetch') || error.message.includes('network error') || error.message.includes('ENOTFOUND') || error.message.includes('socket hang up')) {
+           fetchError = `Network error fetching WordPress posts. Details: ${error.message}`;
+      } else if (error.message.includes('Failed to fetch')) {
+           fetchError = `Error fetching from WordPress API: ${error.message}`;
+      } else {
+           fetchError = `Error processing WordPress API response: ${error.message}`;
+      }
+  } else {
+      fetchError = "An unknown error occurred while fetching or processing WordPress posts.";
+  }
+  allPosts = [];
+}
+
+const winTheNightUrl = `https://winthenight.org`; // URL for Win The Night
+const postsPerPage = 5; // Number of posts to show per page/load
+---
+
+<Layout title="Blog">
+  <main>
+    <section class="section blog-hero" transition:animate={fade({ duration: '0.7s' })}>
+      <div class="container">
+        <h1>Blog</h1>
+        {/* Updated Links/Callouts */}
+        <div class="blog-source-links">
+          <p>
+            This is my personal blog. For more in-depth posts on healing, generational trauma, and more, sign up for the <a href={winTheNightUrl} target="_blank" rel="noopener noreferrer">Win The Night Newsletter</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section blog-list-section">
+      <div class="container">
+        {/* Loading Indicator */}
+        <div id="loading-indicator" class="loading-message">
+          <p>Loading posts...</p>
+          <div class="spinner"></div>
+        </div>
+
+        {/* Content Area (initially hidden) */}
+        <div id="blog-content" style="display: none;">
+          {fetchError && (
+            <div class="error-message">
+              <p>Sorry, couldn't load blog posts at this time.</p>
+              <p><small>Error details: {fetchError}</small></p>
+            </div>
+          )}
+
+          {!fetchError && allPosts.length === 0 && (
+            <p>No blog posts found.</p>
+          )}
+
+          {!fetchError && allPosts.length > 0 && (
+            <>
+              {/* Post list container - posts will be added here by JS */}
+              <ul class="blog-post-list"></ul>
+
+              {/* "Load More" Button - Initially hidden, shown by JS if needed */}
+              <div class="load-more-container" style="display: none;">
+                <button id="load-more-btn" class="button button-secondary">
+                  Load More Posts
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<!-- Client-side script for Load More -->
+<script define:vars={{ allPosts, postsPerPage }}>
+  // NOTE: Removed TypeScript interface and type annotations below
+
+  const posts = allPosts; // Get posts from Astro define:vars (no TS type needed here)
+  const postsContainer = document.querySelector('.blog-post-list');
+  const loadMoreBtn = document.getElementById('load-more-btn');
+  const loadMoreContainer = document.querySelector('.load-more-container');
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const blogContent = document.getElementById('blog-content');
+
+  let currentPage = 0; // Start at page 0
+
+  // The 'post' parameter here implicitly has the structure defined by ClientPostData in the frontmatter
+  function renderPosts(postsToRender) {
+    if (!postsContainer) return;
+
+    let postsHtml = '';
+    postsToRender.forEach(post => {
+      // Add checks for potentially missing data passed from server
+      if (!post || !post.title?.rendered || !post.slug || !post.date_gmt || !post.formattedDate || !post.excerptHtml) {
+        console.error(`Client: Post with ID ${post?.id || 'unknown'} is missing essential data passed from server. Skipping rendering.`, post);
+        return;
+      }
+      const internalPostUrl = `/blog/${post.slug}`;
+
+      // Use the pre-processed data directly
+      postsHtml += `
+        <li class="blog-post-item scroll-target">
+          <article>
+            ${post.featuredImageUrl ? `
+              <a href="${internalPostUrl}" class="post-image-link">
+                <img src="${post.featuredImageUrl}" alt="${post.featuredImageAlt || post.title.rendered}" class="post-featured-image" loading="lazy" />
+              </a>
+            ` : ''}
+            <div class="post-content">
+              <h2 class="post-title">
+                <a href="${internalPostUrl}">${post.title.rendered}</a>
+              </h2>
+              <p class="post-meta">
+                Published on <time datetime="${post.date_gmt}">${post.formattedDate}</time>
+              </p>
+              <div class="post-excerpt">${post.excerptHtml}</div>
+              <a href="${internalPostUrl}" class="read-more-link">
+                Read Full Post &rarr;
+              </a>
+            </div>
+          </article>
+        </li>
+      `;
+    });
+
+    // Use innerHTML for simplicity, consider DocumentFragment for performance on very large lists
+    postsContainer.innerHTML += postsHtml;
+
+    // Re-apply scroll focus effect logic if needed, or ensure it observes dynamically added items
+    // (Assuming the IntersectionObserver in Layout.astro handles new elements)
+  }
+
+  function loadMorePosts() {
+    const start = currentPage * postsPerPage;
+    const end = start + postsPerPage;
+    const postsToLoad = posts.slice(start, end);
+
+    if (postsToLoad.length > 0) {
+      renderPosts(postsToLoad);
+      currentPage++;
+    }
+
+    // Hide button if no more posts left
+    if (currentPage * postsPerPage >= posts.length) {
+      if (loadMoreContainer) loadMoreContainer.style.display = 'none';
+    } else {
+      // Ensure button is visible if there are more posts
+      if (loadMoreContainer) loadMoreContainer.style.display = 'block'; // Or 'flex', 'grid' depending on styling
+    }
+  }
+
+  function initializeBlog() {
+    // Hide loading indicator and show content area
+    if (loadingIndicator) loadingIndicator.style.display = 'none';
+    if (blogContent) blogContent.style.display = 'block';
+
+    if (posts && posts.length > 0 && postsContainer && loadMoreBtn && loadMoreContainer) {
+      // Load initial batch of posts
+      loadMorePosts();
+
+      // Add event listener for the button
+      loadMoreBtn.addEventListener('click', loadMorePosts);
+
+    } else if (!fetchError) {
+      // Handle case where posts array is empty but no fetch error occurred
+      const noPostsMessage = document.createElement('p');
+      noPostsMessage.textContent = 'No blog posts found.';
+      if (postsContainer) postsContainer.appendChild(noPostsMessage);
+    }
+     // If fetchError is present, the Astro template already handles displaying it.
+  }
+
+  // Use astro:page-load event for SPA navigation, fallback for direct load
+  document.addEventListener('astro:page-load', initializeBlog);
+  // Run on initial load as well
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      initializeBlog();
+  } else {
+      document.addEventListener('DOMContentLoaded', initializeBlog);
+  }
+
+</script>
+
+{/* --- Styles --- */}
+<style>
+  .blog-hero {
+    text-align: center;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 3rem;
+  }
+  .blog-hero h1 {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Updated blog source links styling */
+  .blog-source-links {
+    margin-top: 1.5rem;
+    font-size: 1rem; /* Slightly larger */
+    color: var(--text-color); /* Use standard text color */
+    max-width: 650px; /* Constrain width */
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+  .blog-source-links p {
+    margin-bottom: 0; /* Remove bottom margin if only one paragraph */
+  }
+  .blog-source-links a {
+    color: var(--primary-color);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px; /* Adjust offset */
+    font-weight: 600; /* Make link bolder */
+  }
+  .blog-source-links a:hover {
+    color: var(--primary-color-dark);
+  }
+  /* End updated link styles */
+
+  .blog-list-section .container {
+    max-width: 800px;
+  }
+
+  .blog-post-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem; /* Space between posts */
+  }
+
+  .blog-post-item {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    display: flex; /* Use flex for better layout control */
+    flex-direction: column; /* Default stack image and content */
+  }
+  .blog-post-item:hover {
+     transform: translateY(-5px);
+     box-shadow: var(--card-shadow-hover);
+  }
+
+  /* Make article take full width */
+  .blog-post-item article {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+  }
+
+  .post-image-link {
+    display: block;
+    line-height: 0; /* Remove space below image */
+    order: 1; /* Image first */
+    max-height: 300px; /* Limit image height */
+    overflow: hidden; /* Hide parts of image that overflow */
+  }
+
+  .post-featured-image {
+    display: block;
+    width: 100%;
+    height: 100%; /* Fill the container */
+    object-fit: cover; /* Cover the area, cropping if needed */
+    border-bottom: 1px solid var(--border-color);
+    transition: transform 0.3s ease-in-out;
+  }
+   .post-image-link:hover .post-featured-image {
+       transform: scale(1.03); /* Slight zoom on hover */
+   }
+
+
+  .post-content {
+    padding: 1.5rem 2rem 2rem 2rem;
+    order: 2; /* Content second */
+    flex-grow: 1; /* Allow content to take remaining space */
+  }
+
+  .post-title {
+    font-size: 1.6rem; /* Adjust title size */
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+  .post-title a {
+    color: var(--heading-text);
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+  }
+  .post-title a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+  }
+
+  .post-meta {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .post-meta time {
+    font-weight: 500;
+  }
+
+  .post-excerpt {
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.7;
+    /* Limit excerpt lines (optional) */
+    /* display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden; */
+  }
+  .post-excerpt p:last-child {
+    margin-bottom: 0;
+  }
+  .post-excerpt p {
+      margin-bottom: 0.5em;
+  }
+
+  .read-more-link {
+    display: inline-block;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+    margin-top: auto; /* Push to bottom if content is short */
+  }
+  .read-more-link:hover {
+    color: var(--primary-color-dark);
+    text-decoration: underline;
+  }
+
+  /* Load More Button Styling */
+  .load-more-container {
+    text-align: center;
+    margin-top: 3rem; /* Space above the button */
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    display: flex; /* Use flex for centering */
+    justify-content: center;
+  }
+  #load-more-btn {
+      min-width: 150px; /* Give button some width */
+      padding: 0.8rem 1.8rem;
+  }
+
+
+  .error-message {
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    color: #f87171;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .error-message p {
+    margin: 0.5rem 0;
+    color: #fecaca;
+  }
+   .error-message small {
+     color: #fda4af;
+     font-size: 0.85em;
+     display: block;
+     margin-top: 0.2rem;
+     word-wrap: break-word;
+   }
+
+  .scroll-target {
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .is-out-of-focus {
+    opacity: 0.5;
+  }
+
+  /* Loading Indicator Styles */
+  .loading-message {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+
+  .loading-message p {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .spinner {
+    border: 4px solid rgba(var(--text-muted-rgb), 0.3);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  #blog-content:not([style*="block"]) {
+      display: none !important;
+  }
+
+  /* Responsive adjustments */
+  @media (min-width: 600px) {
+      .blog-post-item {
+          flex-direction: row; /* Side-by-side layout on larger screens */
+          max-height: 250px; /* Limit height for horizontal layout */
+      }
+      .post-image-link {
+          order: 1;
+          width: 40%; /* Image takes ~40% width */
+          max-height: none; /* Remove max-height */
+          border-bottom: none; /* Remove bottom border */
+          border-right: 1px solid var(--border-color); /* Add right border */
+      }
+      .post-featured-image {
+          border-bottom: none;
+          height: 100%; /* Ensure image fills link height */
+      }
+      .post-content {
+          order: 2;
+          width: 60%; /* Content takes ~60% width */
+          padding: 1.5rem 2rem; /* Adjust padding */
+          display: flex;
+          flex-direction: column;
+      }
+      .post-title {
+          font-size: 1.5rem;
+      }
+  }
+
+
+  @media (max-width: 600px) {
+    .post-title {
+      font-size: 1.5rem;
+    }
+    .post-content {
+      padding: 1.5rem;
+    }
+    .load-more-container .button {
+        width: auto; /* Allow button to size naturally */
+        padding: 0.75rem 1.5rem;
+    }
+    .blog-source-links {
+        font-size: 0.9rem;
+    }
+  }
+</style>

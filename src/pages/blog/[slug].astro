@@ -1,0 +1,347 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { formatDate } from '../../utils.js'; // Import formatDate helper
+import { fade } from 'astro:transitions';
+
+// Define the type for a WordPress post item from the REST API
+interface WordPressPost {
+  id: number;
+  date_gmt: string;
+  slug: string;
+  link: string; // Link to the original post on WordPress
+  title: {
+    rendered: string;
+  };
+  content: {
+    rendered: string; // Full content HTML
+  };
+  _embedded?: {
+    'wp:featuredmedia'?: {
+        source_url?: string;
+        alt_text?: string;
+    }[];
+  };
+}
+
+export async function getStaticPaths() {
+  const wordpressSiteDomain = 'froydingermediagroup.wordpress.com';
+  // Fetch all posts (adjust per_page if you have more than 100)
+  const wordpressApiUrl = `https://public-api.wordpress.com/wp/v2/sites/${wordpressSiteDomain}/posts?_embed=1&per_page=100`;
+  let posts: WordPressPost[] = [];
+
+  try {
+    const response = await fetch(wordpressApiUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch from WordPress API: ${response.status} ${response.statusText}`);
+    }
+    const data: WordPressPost[] = await response.json();
+    if (!Array.isArray(data)) {
+      throw new Error("WordPress API response was not an array.");
+    }
+    posts = data;
+  } catch (error) {
+    console.error("Error fetching or parsing WordPress posts in [slug].astro getStaticPaths:", error);
+    return []; // Return empty array on error to avoid build failure
+  }
+
+  return posts.map((post) => {
+    if (!post || !post.slug || !post.title?.rendered || !post.date_gmt || !post.content?.rendered) {
+        console.warn(`Skipping path generation for post ID ${post?.id} missing slug/title/date/content.`);
+        return null;
+    }
+
+    // Pass the necessary data as props
+    return {
+      params: { slug: post.slug },
+      props: {
+        post: {
+          title: post.title.rendered,
+          isoDate: post.date_gmt, // Use date_gmt for consistency
+          link: post.link, // Original WP link
+          content: post.content.rendered, // Full HTML content
+          // Pass featured image URL if available
+          featuredImageUrl: post._embedded?.['wp:featuredmedia']?.[0]?.source_url,
+          featuredImageAlt: post._embedded?.['wp:featuredmedia']?.[0]?.alt_text || post.title.rendered,
+        }
+      },
+    };
+  }).filter(path => path !== null); // Filter out any null entries from skipped posts
+}
+
+// Type for the props passed from getStaticPaths
+interface Props {
+  post: {
+    title: string;
+    isoDate: string;
+    link: string;
+    content: string;
+    featuredImageUrl?: string;
+    featuredImageAlt?: string;
+  } | null; // Allow post to be null if data is missing
+}
+
+const { post } = Astro.props as Props;
+
+if (!post) {
+  console.error(`Post data not found for slug: ${Astro.params.slug}`);
+  // Optionally, you could redirect or show a specific error message here
+}
+
+const pageTitle = post?.title || "Blog Post Not Found";
+---
+
+<Layout title={pageTitle}>
+  <main class="single-post-main" transition:animate={fade({ duration: '0.6s' })}>
+    {post ? (
+      <article class="section single-post-article">
+        <div class="container">
+          <header class="post-header">
+            <h1 set:html={post.title}></h1>
+            <p class="post-meta">
+              Published on <time datetime={post.isoDate}>{formatDate(post.isoDate)}</time>
+            </p>
+          </header>
+
+          {/* Optional: Display Featured Image if available */}
+          {post.featuredImageUrl && (
+            <div class="featured-image-container">
+              <img
+                src={post.featuredImageUrl}
+                alt={post.featuredImageAlt || post.title}
+                class="post-featured-image-full"
+                loading="lazy"
+              />
+            </div>
+          )}
+
+          {/* Render the full HTML content from WordPress */}
+          <div class="post-full-content" set:html={post.content}></div>
+
+          <footer class="post-footer">
+             <p>
+               <a href={post.link} target="_blank" rel="noopener noreferrer">View original post on WordPress &rarr;</a>
+             </p>
+             <p style="margin-top: 2rem;">
+               <a href="/blog">&larr; Back to Blog List</a>
+             </p>
+          </footer>
+        </div>
+      </article>
+    ) : (
+      <div class="container section">
+        <h1>Post Not Found</h1>
+        <p>Sorry, we couldn't find the blog post you were looking for.</p>
+        <p style="margin-top: 2rem;">
+           <a href="/blog">&larr; Back to Blog List</a>
+         </p>
+      </div>
+    )}
+  </main>
+</Layout>
+
+<style>
+  .single-post-main {
+    padding-top: 3rem;
+    padding-bottom: 4rem;
+  }
+
+  .single-post-article .container {
+    max-width: 800px; /* Container width */
+  }
+
+  .post-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-header h1 {
+      font-size: 2.5rem; /* Adjust as needed */
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+      color: var(--heading-text);
+  }
+
+  .post-meta {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+  .post-meta time {
+    font-weight: 500;
+  }
+
+  /* Featured Image Styling */
+  .featured-image-container {
+    margin-bottom: 2.5rem; /* Space below the image */
+    line-height: 0; /* Remove extra space below image */
+  }
+  .post-featured-image-full {
+    display: block;
+    max-width: 100%; /* Ensure it doesn't overflow container */
+    width: auto; /* Let browser determine width based on height/aspect ratio */
+    max-width: 800px; /* Max width constraint */
+    height: auto; /* Maintain aspect ratio */
+    margin: 0 auto; /* Center the image */
+    border-radius: 8px; /* Optional rounding */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+
+
+  .post-full-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--body-text);
+  }
+
+  /* --- Styling for content coming from WordPress --- */
+  /* These styles target elements *within* the set:html content */
+  .post-full-content > * + * {
+      margin-top: 1.5em;
+  }
+
+  .post-full-content h1,
+  .post-full-content h2,
+  .post-full-content h3,
+  .post-full-content h4,
+  .post-full-content h5,
+  .post-full-content h6 {
+      color: var(--heading-text);
+      line-height: 1.3;
+      margin-bottom: 0.75em;
+  }
+   .post-full-content h2 { font-size: 1.8em; margin-top: 2em; }
+   .post-full-content h3 { font-size: 1.5em; margin-top: 1.8em; }
+
+  .post-full-content p {
+      /* Use default body text color unless WP specifies otherwise */
+      color: var(--text-muted);
+      margin-bottom: 1em;
+  }
+
+  .post-full-content a {
+      color: var(--primary-color);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+  }
+  .post-full-content a:hover {
+      color: var(--primary-color-dark);
+  }
+
+  /* --- Image Constraints within Content --- */
+  /* Target ALL images specifically within the post content */
+  .post-full-content :global(img) { /* Use :global() for unscoped selector */
+      display: block; /* Ensure it's a block element for margin auto */
+      max-width: 100%; /* Ensure image never exceeds its container */
+      /* Limit width to 800px, but allow it to be smaller if container is smaller */
+      width: auto; /* Let the browser determine width based on height and aspect ratio */
+      max-width: 800px; /* Maximum width constraint */
+      height: auto; /* Maintain aspect ratio */
+      margin: 2em auto; /* Center the image horizontally and add vertical space */
+      border-radius: 4px; /* Optional: add slight rounding */
+      background-color: var(--card-bg); /* Optional: subtle background */
+  }
+  /* --- End Image Constraints --- */
+
+
+  .post-full-content blockquote {
+      border-left: 4px solid var(--primary-color);
+      padding-left: 1.5em;
+      margin-left: 0;
+      margin-right: 0;
+      font-style: italic;
+      color: var(--text-muted);
+  }
+  .post-full-content blockquote p {
+      color: var(--text-muted); /* Ensure blockquote text is muted */
+      margin-bottom: 0.5em; /* Adjust spacing within blockquote */
+  }
+
+  .post-full-content ul,
+  .post-full-content ol {
+      padding-left: 2em;
+      color: var(--text-muted);
+  }
+  .post-full-content li {
+      margin-bottom: 0.5em;
+  }
+
+  /* Handle WordPress specific classes if needed (e.g., wp-block-image) */
+  .post-full-content :global(.wp-block-image) {
+      margin-top: 2em;
+      margin-bottom: 2em;
+  }
+  .post-full-content :global(.wp-block-image img) {
+      margin: 0 auto; /* Override default image margin if needed */
+  }
+  .post-full-content :global(figure.wp-block-image) {
+      margin: 2em 0; /* Adjust figure margins */
+  }
+   .post-full-content :global(figure.wp-block-image figcaption) {
+      font-size: 0.85em;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 0.5em;
+   }
+
+
+  .post-full-content pre,
+  .post-full-content :global(pre.wp-block-code) { /* Target WP code blocks */
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 1em;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.9em;
+  }
+  .post-full-content code,
+  .post-full-content :global(code) { /* Target inline code */
+      font-family: monospace;
+      background-color: rgba(var(--primary-color-rgb), 0.1);
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+  }
+  .post-full-content pre code,
+  .post-full-content :global(pre.wp-block-code code) {
+      background-color: transparent;
+      padding: 0;
+      font-size: inherit;
+      border-radius: 0;
+  }
+
+  .post-footer {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      font-size: 0.95rem;
+  }
+   .post-footer p {
+       margin-bottom: 0.5rem;
+   }
+   .post-footer a {
+       color: var(--primary-color);
+       font-weight: 600;
+   }
+   .post-footer a:hover {
+       color: var(--primary-color-dark);
+       text-decoration: underline;
+   }
+
+  @media (max-width: 768px) {
+      .post-header h1 {
+          font-size: 2rem;
+      }
+      .post-full-content {
+          font-size: 1rem;
+      }
+      /* Ensure images scale down nicely on smaller screens */
+      .post-full-content :global(img),
+      .post-featured-image-full {
+          max-width: 100%; /* Override the 800px max-width if screen is smaller */
+      }
+  }
+
+</style>
