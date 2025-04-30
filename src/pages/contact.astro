@@ -3,10 +3,7 @@
 import Layout from '../layouts/Layout.astro';
 import { fade } from 'astro:transitions';
 
-// Updated Calendly URL
 const calendlyUrl = 'https://calendly.com/jkrd09/30min';
-
-// Check for query parameter to pre-fill message (optional)
 const urlParams = new URLSearchParams(Astro.url.search);
 const inquiryType = urlParams.get('type');
 let initialMessage = '';
@@ -16,7 +13,7 @@ if (inquiryType === 'website') {
   initialMessage = "Hey Jake, I'd like to discuss consulting options.";
 }
 
-const formAction = "https://example.com/placeholder_form_handler"; // Placeholder: Replace with actual endpoint later
+const formAction = "https://example.com/placeholder_form_handler";
 ---
 <Layout title="Contact">
   <main>
@@ -27,26 +24,29 @@ const formAction = "https://example.com/placeholder_form_handler"; // Placeholde
           Have questions about consulting, website development, or just want to say hi? Use the form below or <a href={calendlyUrl} onclick={`Calendly.initPopupWidget({url: '${calendlyUrl}'}); return false;`}>book a Discovery Call</a>.
         </p>
 
-        {/* Basic HTML Form Structure */}
-        <form id="contactForm" action={formAction} method="POST" style="text-align: left;">
+        <form id="contactForm" action={formAction} method="POST" data-netlify="true" name="contactForm" style="text-align: left;">
+          <input type="hidden" name="form-name" value="contactForm" />
+
           <div class="form-group">
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required />
           </div>
+
           <div class="form-group">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required />
           </div>
+
           <div class="form-group">
             <label for="message">Message:</label>
             <textarea id="message" name="message" rows="6" required>{initialMessage}</textarea>
           </div>
+
           <div style="text-align: center; margin-top: 2rem;">
             <button type="submit" class="button">Send Message</button>
           </div>
         </form>
 
-        {/* Submission Confirmation Pop-up (Hidden Initially) */}
         <div id="confirmationPopup" class="popup-overlay" style="display: none;">
           <div class="popup-content">
             <span class="close-popup" onclick="document.getElementById('confirmationPopup').style.display='none'">&times;</span>
@@ -55,12 +55,8 @@ const formAction = "https://example.com/placeholder_form_handler"; // Placeholde
             <button class="button button-secondary" onclick="document.getElementById('confirmationPopup').style.display='none'">Close</button>
           </div>
         </div>
-
       </div>
     </section>
-
-    {/* Ensure NO duplicate footer HTML is here */}
-
   </main>
 </Layout>
 
@@ -68,66 +64,38 @@ const formAction = "https://example.com/placeholder_form_handler"; // Placeholde
   function setupContactForm() {
     const form = document.getElementById('contactForm');
     const confirmationPopup = document.getElementById('confirmationPopup');
+    if (!form || !confirmationPopup) return;
 
-    if (!form || !confirmationPopup) {
-      // console.error("Contact form or confirmation popup not found.");
-      return;
-    }
-
-    // --- Robust Listener Management: Clone & Replace ---
     const handleFormSubmit = async (event) => {
-        event.preventDefault(); // Prevent default submission for now
-
-        // --- Placeholder for actual submission logic ---
-        console.log('Form submitted (placeholder). Data:', new FormData(form));
-        // In a real scenario, you would fetch() to formAction here
-        // and handle success/error responses.
-
-        // --- Show confirmation pop-up ---
-        confirmationPopup.style.display = 'flex'; // Show the popup
-
-        // Optionally clear the form
-        // form.reset();
+      event.preventDefault();
+      console.log('Form submitted (placeholder). Data:', new FormData(form));
+      confirmationPopup.style.display = 'flex';
     };
 
-    // Clone, replace, and add listener to the new node
     const newForm = form.cloneNode(true);
-    // Preserve initial message if it was set by Astro
     const initialMessageTextarea = newForm.querySelector('#message');
     const originalMessageTextarea = form.querySelector('#message');
     if (initialMessageTextarea && originalMessageTextarea) {
-        initialMessageTextarea.value = originalMessageTextarea.value;
+      initialMessageTextarea.value = originalMessageTextarea.value;
     }
     form.parentNode.replaceChild(newForm, form);
     newForm.addEventListener('submit', handleFormSubmit);
-    // --- End Robust Listener Management ---
 
-    // Add listener to close button within the popup (if needed, though inline onclick is present)
     const closeButton = confirmationPopup.querySelector('.close-popup');
     const closeButtonSecondary = confirmationPopup.querySelector('.button-secondary');
-    if (closeButton) {
-        closeButton.onclick = () => confirmationPopup.style.display = 'none';
-    }
-     if (closeButtonSecondary) {
-        closeButtonSecondary.onclick = () => confirmationPopup.style.display = 'none';
-    }
-    // console.log('Contact form script initialized.');
+    if (closeButton) closeButton.onclick = () => confirmationPopup.style.display = 'none';
+    if (closeButtonSecondary) closeButtonSecondary.onclick = () => confirmationPopup.style.display = 'none';
   }
 
-
-  // Run on initial load
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupContactForm);
   } else {
-    setupContactForm(); // DOM already loaded
+    setupContactForm();
   }
 
-  // Re-run after Astro page transitions
   document.addEventListener('astro:after-swap', () => {
-    // console.log('astro:after-swap triggered for contact form');
     requestAnimationFrame(setupContactForm);
   });
-
 </script>
 
 <style>
@@ -156,34 +124,31 @@ const formAction = "https://example.com/placeholder_form_handler"; // Placeholde
   .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3); /* Subtle focus ring */
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3);
   }
   .form-group textarea {
     resize: vertical;
     min-height: 120px;
   }
-
-  /* Pop-up Styles */
   .popup-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* Ensure it's on top */
-    opacity: 0; /* Start hidden */
+    z-index: 1000;
+    opacity: 0;
     transition: opacity 0.3s ease-in-out;
     padding: 1rem;
     box-sizing: border-box;
   }
-  .popup-overlay[style*="display: flex;"] { /* More specific selector for when it's shown */
-      opacity: 1;
+  .popup-overlay[style*="display: flex;"] {
+    opacity: 1;
   }
-
   .popup-content {
     background-color: var(--card-bg);
     padding: 2.5rem;
@@ -194,13 +159,12 @@ const formAction = "https://example.com/placeholder_form_handler"; // Placeholde
     width: 100%;
     position: relative;
     border: 1px solid var(--border-color);
-    transform: scale(0.95); /* Start slightly small */
+    transform: scale(0.95);
     transition: transform 0.3s ease-in-out;
   }
-   .popup-overlay[style*="display: flex;"] .popup-content {
-      transform: scale(1); /* Scale to full size when shown */
-   }
-
+  .popup-overlay[style*="display: flex;"] .popup-content {
+    transform: scale(1);
+  }
   .popup-content h2 {
     color: var(--heading-text);
     margin-top: 0;
