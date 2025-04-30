@@ -1,0 +1,1 @@
+import"./hoisted.BScVxmeO.js";document.addEventListener("DOMContentLoaded",()=>{const t=document.getElementById("contactForm");t&&t.addEventListener("submit",()=>{setTimeout(()=>{t.outerHTML="<p style='margin-top: 2rem;'>Thanks for reaching out! I’ll get back to you soon.</p>"},200)})});
