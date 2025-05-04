@@ -3,7 +3,20 @@
 import Layout from '../layouts/Layout.astro';
 import { fade } from 'astro:transitions';
 
+// Updated Calendly URL
 const calendlyUrl = 'https://calendly.com/jkrd09/30min';
+
+// Check for query parameter to pre-fill message (optional)
+const urlParams = new URLSearchParams(Astro.url.search);
+const inquiryType = urlParams.get('type');
+let initialMessage = '';
+if (inquiryType === 'website') {
+  initialMessage = "Hey Jake, I'm interested in learning more about your website development services.";
+} else if (inquiryType === 'consulting') {
+  initialMessage = "Hey Jake, I'd like to discuss consulting options.";
+}
+
+// No action attribute or empty string to let Netlify handle form submission automatically
 ---
 <Layout title="Contact">
   <main>
@@ -11,103 +24,97 @@ const calendlyUrl = 'https://calendly.com/jkrd09/30min';
       <div class="container" style="max-width: 700px; text-align: center;">
         <h1>Get in Touch</h1>
         <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2.5rem;">
-          Have questions about consulting, website development, or just want to say hi? 
-          <a href={calendlyUrl} onclick={`Calendly.initPopupWidget({url: '${calendlyUrl}'}); return false;`}>
-            Book a Discovery Call
-          </a> or email Jake directly using the button below.
+          Have questions about consulting, website development, or just want to say hi? Use the form below or <a href={calendlyUrl} onclick={`Calendly.initPopupWidget({url: '${calendlyUrl}'}); return false;`}>book a Discovery Call</a>.
         </p>
 
-        <form 
-          name="contact"
-          method="POST"
-          netlify-honeypot="bot-field"
-          id="contactForm"
-          data-netlify="true"
-          style="margin-top: 3rem;"
-        >
+        {/* Netlify form with required attributes */}
+        <form id="contactForm" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" style="text-align: left;">
+          {/* Hidden input for Netlify form name */}
           <input type="hidden" name="form-name" value="contact" />
-          <p hidden>
-            <label>Don’t fill this out: <input name="bot-field" /></label>
-          </p>
+          {/* Honeypot field for spam bots */}
+          <input type="hidden" name="bot-field" />
 
           <div class="form-group">
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required />
           </div>
-
           <div class="form-group">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required />
           </div>
-
           <div class="form-group">
             <label for="message">Message:</label>
-            <textarea id="message" name="message" rows="6" required></textarea>
+            <textarea id="message" name="message" rows="6" required>{initialMessage}</textarea>
           </div>
-
           <div style="text-align: center; margin-top: 2rem;">
             <button type="submit" class="button">Send Message</button>
           </div>
         </form>
 
-        <div style="text-align: center; margin-top: 2rem;">
-          <a href="mailto:j@froydinger.com" class="button" style="text-decoration: none;">
-            Hate forms? Email me.
-          </a>
-        </div>
-
-        <div id="customConfirmation" style="display: none; margin-top: 3rem;">
-          <div class="confirmation-box">
-            <p><strong>Thanks for reaching out!</strong><br />I'll get back to you soon.</p>
+        {/* Submission Confirmation Pop-up (Hidden Initially) */}
+        <div id="confirmationPopup" class="popup-overlay" style="display: none;">
+          <div class="popup-content">
+            <span class="close-popup" onclick="document.getElementById('confirmationPopup').style.display='none'">&times;</span>
+            <h2>Message Sent!</h2>
+            <p>Thanks for reaching out. I'll get back to you as soon as possible.</p>
+            <button class="button button-secondary" onclick="document.getElementById('confirmationPopup').style.display='none'">Close</button>
           </div>
         </div>
+
       </div>
     </section>
+
+    {/* Ensure NO duplicate footer HTML is here */}
+
   </main>
 </Layout>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("contactForm");
-    const confirmation = document.getElementById("customConfirmation");
+  // Optional: You can keep your existing JS for showing confirmation popup on submit
+  function setupContactForm() {
+    const form = document.getElementById('contactForm');
+    const confirmationPopup = document.getElementById('confirmationPopup');
 
-    if (!form || !confirmation) return;
+    if (!form || !confirmationPopup) {
+      return;
+    }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    const handleFormSubmit = (event) => {
+      // Let Netlify handle the submission normally (no preventDefault)
+      // Show confirmation popup after submission
+      // Since Netlify redirects or reloads, you might want to handle this with a thank-you page or Netlify's redirect
 
-      const formData = new FormData(form);
+      // For SPA or AJAX submission, you'd handle fetch here, but for automatic detection, no JS override is needed
+    };
 
-      try {
-        await fetch("/", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams(formData).toString(),
-        });
+    // Remove any previous listeners and add new one if needed
+    form.removeEventListener('submit', handleFormSubmit);
+    form.addEventListener('submit', handleFormSubmit);
 
-        form.style.display = "none";
-        confirmation.style.display = "block";
-      } catch (error) {
-        alert("There was a problem submitting the form. Please try again.");
-        console.error("Netlify form submission error:", error);
-      }
-    });
-  });
+    // Close popup buttons
+    const closeButton = confirmationPopup.querySelector('.close-popup');
+    const closeButtonSecondary = confirmationPopup.querySelector('.button-secondary');
+    if (closeButton) closeButton.onclick = () => confirmationPopup.style.display = 'none';
+    if (closeButtonSecondary) closeButtonSecondary.onclick = () => confirmationPopup.style.display = 'none';
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupContactForm);
+  } else {
+    setupContactForm();
+  }
 </script>
 
 <style>
   .form-group {
     margin-bottom: 1.5rem;
-    text-align: left;
   }
-
   .form-group label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
     color: var(--heading-text);
   }
-
   .form-group input,
   .form-group textarea {
     width: 100%;
@@ -120,35 +127,75 @@ const calendlyUrl = 'https://calendly.com/jkrd09/30min';
     box-sizing: border-box;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
   }
-
   .form-group input:focus,
   .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3);
   }
-
   .form-group textarea {
     resize: vertical;
     min-height: 120px;
   }
 
-  .confirmation-box {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    color: var(--body-text);
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 0 12px rgba(0, 255, 0, 0.1);
-    font-size: 1.1rem;
-    line-height: 1.6;
-    max-width: 500px;
-    margin: 0 auto;
-    animation: fadeIn 0.4s ease-in-out;
+  /* Pop-up Styles */
+  .popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+  .popup-overlay[style*="display: flex;"] {
+    opacity: 1;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.98); }
-    to { opacity: 1; transform: scale(1); }
+  .popup-content {
+    background-color: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    max-width: 450px;
+    width: 100%;
+    position: relative;
+    border: 1px solid var(--border-color);
+    transform: scale(0.95);
+    transition: transform 0.3s ease-in-out;
+  }
+  .popup-overlay[style*="display: flex;"] .popup-content {
+    transform: scale(1);
+  }
+
+  .popup-content h2 {
+    color: var(--heading-text);
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  .popup-content p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+  }
+  .close-popup {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 2rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease;
+  }
+  .close-popup:hover {
+    color: var(--primary-color);
   }
 </style>
